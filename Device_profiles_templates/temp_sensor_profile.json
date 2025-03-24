@@ -1,0 +1,30 @@
+{
+    "profiles": [
+      {
+        "name": "TVI-Temperature Sensor",
+        "attributes": [
+          {
+            "name": "temperature",
+            "type": "number",
+            "min_value": -40.0,
+            "max_value": 85.0,
+            "options": []
+          },
+          {
+            "name": "humidity",
+            "type": "number",
+            "min_value": 0.0,
+            "max_value": 100.0,
+            "options": []
+          },
+          {
+            "name": "battery_level",
+            "type": "integer",
+            "min_value": 0,
+            "max_value": 100,
+            "options": []
+          }
+        ]
+      }
+    ]  
+}

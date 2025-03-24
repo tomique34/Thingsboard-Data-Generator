@@ -1,0 +1,70 @@
+{
+  "profiles": [
+    {
+      "name": "Smart Thermostat",
+      "attributes": [
+        {
+          "name": "current_temperature",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 40.0,
+          "options": []
+        },
+        {
+          "name": "target_temperature",
+          "type": "number",
+          "min_value": 5.0,
+          "max_value": 35.0,
+          "options": []
+        },
+        {
+          "name": "humidity",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 100.0,
+          "options": []
+        },
+        {
+          "name": "mode",
+          "type": "string",
+          "min_value": null,
+          "max_value": null,
+          "options": ["heat", "cool", "auto", "off"]
+        },
+        {
+          "name": "fan_mode",
+          "type": "string",
+          "min_value": null,
+          "max_value": null,
+          "options": ["auto", "on"]
+        },
+        {
+          "name": "power_consumption",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 3000.0,
+          "options": []
+        },
+        {
+          "name": "is_heating",
+          "type": "boolean",
+          "min_value": null,
+          "max_value": null,
+          "options": []
+        },
+        {
+          "name": "is_cooling",
+          "type": "boolean",
+          "min_value": null,
+          "max_value": null,
+          "options": []
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "exported_at": "2025-03-24T12:00:00",
+    "version": "1.0",
+    "description": "Smart Thermostat profile for Thingsboard Data Generator"
+  }
+}

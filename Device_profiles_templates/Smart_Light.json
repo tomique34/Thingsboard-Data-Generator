@@ -1,0 +1,42 @@
+{
+  "profiles": [
+    {
+      "name": "Smart Light",
+      "attributes": [
+        {
+          "name": "state",
+          "type": "string",
+          "min_value": null,
+          "max_value": null,
+          "options": ["ON", "OFF"]
+        },
+        {
+          "name": "brightness",
+          "type": "integer",
+          "min_value": 0,
+          "max_value": 100,
+          "options": []
+        },
+        {
+          "name": "color_temp",
+          "type": "integer",
+          "min_value": 2700,
+          "max_value": 6500,
+          "options": []
+        },
+        {
+          "name": "color_mode",
+          "type": "string",
+          "min_value": null,
+          "max_value": null,
+          "options": ["white", "color", "temperature"]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "exported_at": "2025-03-24T12:00:00",
+    "version": "1.0",
+    "description": "Smart Light profile for Thingsboard Data Generator"
+  }
+}

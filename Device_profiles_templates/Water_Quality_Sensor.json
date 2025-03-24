@@ -1,0 +1,49 @@
+{
+  "profiles": [
+    {
+      "name": "Water Quality Sensor",
+      "attributes": [
+        {
+          "name": "ph",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 14.0,
+          "options": []
+        },
+        {
+          "name": "turbidity",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 100.0,
+          "options": []
+        },
+        {
+          "name": "dissolved_oxygen",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 20.0,
+          "options": []
+        },
+        {
+          "name": "temperature",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 40.0,
+          "options": []
+        },
+        {
+          "name": "conductivity",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 2000.0,
+          "options": []
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "exported_at": "2025-03-24T12:00:00",
+    "version": "1.0",
+    "description": "Water Quality Sensor profile for Thingsboard Data Generator"
+  }
+}

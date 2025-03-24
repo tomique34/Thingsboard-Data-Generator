@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Connect to Thingsboard - Data Generator{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><i class="fas fa-plug me-2"></i>Connect to Thingsboard</h3>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    Connect to your Thingsboard Professional Edition instance to begin generating data.
+                </p>
+                
+                <form method="POST" action="{{ url_for('main.index') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.host.label(class="form-label") }}
+                        {{ form.host(class="form-control", placeholder="e.g., http://localhost") }}
+                        {% if form.host.errors %}
+                            <div class="text-danger">
+                                {% for error in form.host.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.port.label(class="form-label") }}
+                        {{ form.port(class="form-control", placeholder="e.g., 8080") }}
+                        {% if form.port.errors %}
+                            <div class="text-danger">
+                                {% for error in form.port.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control", placeholder="e.g., tenant@thingsboard.org") }}
+                        {% if form.username.errors %}
+                            <div class="text-danger">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control") }}
+                        {% if form.password.errors %}
+                            <div class="text-danger">
+                                {% for error in form.password.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-muted">
+                <i class="fas fa-info-circle me-1"></i>
+                Your credentials are stored in memory and not persisted between sessions.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit {{ profile.name }} - Thingsboard Data Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-edit me-2"></i>Edit Profile: {{ profile.name }}</h2>
+            <div>
+                <a href="{{ url_for('main.device_profiles') }}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </a>
+                
+                <a href="{{ url_for('main.generate_data', profile_name=profile.name) }}" class="btn btn-success">
+                    <i class="fas fa-random me-1"></i> Generate Data
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Attributes</h5>
+            </div>
+            <div class="card-body">
+                {% if profile.attributes %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Min</th>
+                                    <th>Max</th>
+                                    <th>Options</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attr in profile.attributes %}
+                                    <tr>
+                                        <td>{{ attr.name }}</td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ attr.type }}</span>
+                                        </td>
+                                        <td>{{ attr.min_value if attr.min_value is not none else '-' }}</td>
+                                        <td>{{ attr.max_value if attr.max_value is not none else '-' }}</td>
+                                        <td>
+                                            {% if attr.options %}
+                                                <small>{{ ', '.join(attr.options) }}</small>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <form action="{{ url_for('main.delete_attribute', profile_name=profile.name, attr_index=loop.index0) }}" method="POST"
+                                                  onsubmit="return confirm('Are you sure you want to delete this attribute?');">
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No attributes defined yet. Add one using the form on the right.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Add Attribute</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.edit_device_profile', profile_name=profile.name) }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control", placeholder="e.g., temperature") }}
+                        {% if form.name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.data_type.label(class="form-label") }}
+                        {{ form.data_type(class="form-select") }}
+                        {% if form.data_type.errors %}
+                            <div class="text-danger">
+                                {% for error in form.data_type.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.min_value.label(class="form-label") }}
+                        {{ form.min_value(class="form-control", placeholder="Min value for numeric types") }}
+                        {% if form.min_value.errors %}
+                            <div class="text-danger">
+                                {% for error in form.min_value.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.max_value.label(class="form-label") }}
+                        {{ form.max_value(class="form-control", placeholder="Max value for numeric types") }}
+                        {% if form.max_value.errors %}
+                            <div class="text-danger">
+                                {% for error in form.max_value.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.options.label(class="form-label") }}
+                        {{ form.options(class="form-control", placeholder="option1,option2,option3") }}
+                        {% if form.options.errors %}
+                            <div class="text-danger">
+                                {% for error in form.options.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            For string type, separate options with commas
+                        </small>
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

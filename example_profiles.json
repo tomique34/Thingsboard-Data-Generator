@@ -1,0 +1,108 @@
+{
+  "profiles": [
+    {
+      "name": "Temperature Sensor",
+      "attributes": [
+        {
+          "name": "temperature",
+          "type": "number",
+          "min_value": -40.0,
+          "max_value": 85.0,
+          "options": []
+        },
+        {
+          "name": "humidity",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 100.0,
+          "options": []
+        },
+        {
+          "name": "battery_level",
+          "type": "integer",
+          "min_value": 0,
+          "max_value": 100,
+          "options": []
+        }
+      ]
+    },
+    {
+      "name": "Smart Light",
+      "attributes": [
+        {
+          "name": "state",
+          "type": "string",
+          "min_value": null,
+          "max_value": null,
+          "options": ["ON", "OFF"]
+        },
+        {
+          "name": "brightness",
+          "type": "integer",
+          "min_value": 0,
+          "max_value": 100,
+          "options": []
+        },
+        {
+          "name": "color_temp",
+          "type": "integer",
+          "min_value": 2700,
+          "max_value": 6500,
+          "options": []
+        },
+        {
+          "name": "color_mode",
+          "type": "string",
+          "min_value": null,
+          "max_value": null,
+          "options": ["white", "color", "temperature"]
+        }
+      ]
+    },
+    {
+      "name": "Water Quality Sensor",
+      "attributes": [
+        {
+          "name": "ph",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 14.0,
+          "options": []
+        },
+        {
+          "name": "turbidity",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 100.0,
+          "options": []
+        },
+        {
+          "name": "dissolved_oxygen",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 20.0,
+          "options": []
+        },
+        {
+          "name": "temperature",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 40.0,
+          "options": []
+        },
+        {
+          "name": "conductivity",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 2000.0,
+          "options": []
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "exported_at": "2025-03-24T12:00:00",
+    "version": "1.0",
+    "description": "Example device profiles for Thingsboard Data Generator"
+  }
+}

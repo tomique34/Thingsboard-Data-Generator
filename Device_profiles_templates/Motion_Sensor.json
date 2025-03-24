@@ -1,0 +1,56 @@
+{
+  "profiles": [
+    {
+      "name": "Motion Sensor",
+      "attributes": [
+        {
+          "name": "motion_detected",
+          "type": "boolean",
+          "min_value": null,
+          "max_value": null,
+          "options": []
+        },
+        {
+          "name": "last_motion_time",
+          "type": "integer",
+          "min_value": 0,
+          "max_value": 9999999999,
+          "options": []
+        },
+        {
+          "name": "sensitivity",
+          "type": "integer",
+          "min_value": 1,
+          "max_value": 10,
+          "options": []
+        },
+        {
+          "name": "illuminance",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 10000.0,
+          "options": []
+        },
+        {
+          "name": "battery_level",
+          "type": "integer",
+          "min_value": 0,
+          "max_value": 100,
+          "options": []
+        },
+        {
+          "name": "tamper_alert",
+          "type": "boolean",
+          "min_value": null,
+          "max_value": null,
+          "options": []
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "exported_at": "2025-03-24T12:00:00",
+    "version": "1.0",
+    "description": "Motion Sensor profile for Thingsboard Data Generator"
+  }
+}

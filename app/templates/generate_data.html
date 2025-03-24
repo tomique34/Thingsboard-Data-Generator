@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Generate Data for {{ profile.name }} - Thingsboard Data Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-random me-2"></i>Generate Data: {{ profile.name }}</h2>
+            <a href="{{ url_for('main.edit_device_profile', profile_name=profile.name) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Profile
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Generation Settings</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.generate_data', profile_name=profile.name) }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.device_name.label(class="form-label") }}
+                        {{ form.device_name(class="form-control", placeholder="e.g., Sensor-123") }}
+                        {% if form.device_name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.device_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Name of the device in Thingsboard. It will be created if it doesn't exist.
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.data_type.label(class="form-label") }}
+                        {{ form.data_type(class="form-select") }}
+                        {% if form.data_type.errors %}
+                            <div class="text-danger">
+                                {% for error in form.data_type.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Telemetry data includes timestamps, attributes are persistent.
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Profile Attributes</label>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Range/Options</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for attr in profile.attributes %}
+                                        <tr>
+                                            <td>{{ attr.name }}</td>
+                                            <td>{{ attr.type }}</td>
+                                            <td>
+                                                {% if attr.type in ['number', 'integer'] %}
+                                                    {{ attr.min_value if attr.min_value is not none else '0' }} - 
+                                                    {{ attr.max_value if attr.max_value is not none else '100' }}
+                                                {% elif attr.type == 'string' and attr.options %}
+                                                    <small>{{ ', '.join(attr.options) }}</small>
+                                                {% elif attr.type == 'boolean' %}
+                                                    true/false
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-success btn-lg") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-table me-2"></i>Generated Data</h5>
+            </div>
+            <div class="card-body">
+                {% if attributes or telemetry %}
+                    <div class="alert alert-success mb-3">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Data sent successfully to ThingsBoard!
+                    </div>
+                    
+                    {% if attributes %}
+                        <h6>Attributes:</h6>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for key, value in attributes.items() %}
+                                        <tr>
+                                            <td>{{ key }}</td>
+                                            <td><code>{{ value }}</code></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                    
+                    {% if telemetry %}
+                        <h6>Telemetry:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Key</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for key, value in telemetry.items() %}
+                                        <tr>
+                                            <td>{{ key }}</td>
+                                            <td><code>{{ value }}</code></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 mt-3">
+                        <button class="btn btn-primary" onclick="window.location.reload();">
+                            <i class="fas fa-sync me-1"></i> Generate New Values
+                        </button>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Fill in the form and click "Generate & Send Data" to see the generated values here.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

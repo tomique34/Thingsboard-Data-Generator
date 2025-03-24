@@ -1,0 +1,70 @@
+{
+  "profiles": [
+    {
+      "name": "Energy Meter",
+      "attributes": [
+        {
+          "name": "active_power",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 10000.0,
+          "options": []
+        },
+        {
+          "name": "reactive_power",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 5000.0,
+          "options": []
+        },
+        {
+          "name": "voltage",
+          "type": "number",
+          "min_value": 210.0,
+          "max_value": 250.0,
+          "options": []
+        },
+        {
+          "name": "current",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 100.0,
+          "options": []
+        },
+        {
+          "name": "frequency",
+          "type": "number",
+          "min_value": 49.5,
+          "max_value": 50.5,
+          "options": []
+        },
+        {
+          "name": "power_factor",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 1.0,
+          "options": []
+        },
+        {
+          "name": "total_energy_consumption",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 1000000.0,
+          "options": []
+        },
+        {
+          "name": "phase",
+          "type": "string",
+          "min_value": null,
+          "max_value": null,
+          "options": ["single", "three"]
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "exported_at": "2025-03-24T12:00:00",
+    "version": "1.0",
+    "description": "Energy Meter profile for Thingsboard Data Generator"
+  }
+}

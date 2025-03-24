@@ -1,0 +1,63 @@
+{
+  "profiles": [
+    {
+      "name": "Air Quality Sensor",
+      "attributes": [
+        {
+          "name": "pm25",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 500.0,
+          "options": []
+        },
+        {
+          "name": "pm10",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 1000.0,
+          "options": []
+        },
+        {
+          "name": "co2",
+          "type": "number",
+          "min_value": 400.0,
+          "max_value": 5000.0,
+          "options": []
+        },
+        {
+          "name": "tvoc",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 1000.0,
+          "options": []
+        },
+        {
+          "name": "temperature",
+          "type": "number",
+          "min_value": -10.0,
+          "max_value": 50.0,
+          "options": []
+        },
+        {
+          "name": "humidity",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 100.0,
+          "options": []
+        },
+        {
+          "name": "air_quality_index",
+          "type": "integer",
+          "min_value": 0,
+          "max_value": 500,
+          "options": []
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "exported_at": "2025-03-24T12:00:00",
+    "version": "1.0",
+    "description": "Air Quality Sensor profile for Thingsboard Data Generator"
+  }
+}

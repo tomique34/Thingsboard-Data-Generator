@@ -1,0 +1,77 @@
+{
+  "profiles": [
+    {
+      "name": "GPS Tracker",
+      "attributes": [
+        {
+          "name": "latitude",
+          "type": "number",
+          "min_value": -90.0,
+          "max_value": 90.0,
+          "options": []
+        },
+        {
+          "name": "longitude",
+          "type": "number",
+          "min_value": -180.0,
+          "max_value": 180.0,
+          "options": []
+        },
+        {
+          "name": "altitude",
+          "type": "number",
+          "min_value": -100.0,
+          "max_value": 8848.0,
+          "options": []
+        },
+        {
+          "name": "speed",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 250.0,
+          "options": []
+        },
+        {
+          "name": "heading",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 359.9,
+          "options": []
+        },
+        {
+          "name": "satellites",
+          "type": "integer",
+          "min_value": 0,
+          "max_value": 30,
+          "options": []
+        },
+        {
+          "name": "hdop",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 10.0,
+          "options": []
+        },
+        {
+          "name": "fix_type",
+          "type": "string",
+          "min_value": null,
+          "max_value": null,
+          "options": ["no_fix", "2d_fix", "3d_fix"]
+        },
+        {
+          "name": "battery_level",
+          "type": "integer",
+          "min_value": 0,
+          "max_value": 100,
+          "options": []
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "exported_at": "2025-03-24T12:00:00",
+    "version": "1.0",
+    "description": "GPS Tracker profile for Thingsboard Data Generator"
+  }
+}
