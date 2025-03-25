@@ -179,8 +179,8 @@ class ThingsboardClient:
             print(traceback.format_exc())
             raise Exception(f"Error sending attributes: {e}")
     
-    def send_telemetry(self, device_id, telemetry, timestamp=None):
-        """Send telemetry to a device"""
+    def send_telemetry(self, device_id, telemetry, timestamp=None, metadata=None):
+        """Send telemetry to a device with optional metadata"""
         if not self.logged_in:
             self.login()
         
@@ -195,11 +195,24 @@ class ThingsboardClient:
                 if isinstance(value, bool):
                     telemetry[key] = str(value).lower()  # Convert True/False to 'true'/'false'
             
+            # Add metadata if provided
+            if metadata:
+                for key, value in metadata.items():
+                    if isinstance(value, bool):
+                        metadata[key] = str(value).lower()  # Convert True/False to 'true'/'false'
+                
+                # Print metadata for debugging
+                print(f"DEBUG: Including metadata in telemetry: {metadata}")
+            
             # Format the telemetry data
             telemetry_data = {
                 "ts": timestamp,
                 "values": telemetry
             }
+            
+            # Add metadata to telemetry data if provided
+            if metadata:
+                telemetry_data["metadata"] = metadata
             
             # Print debug info to help troubleshoot
             print(f"DEBUG: Using device_id: {device_id}")

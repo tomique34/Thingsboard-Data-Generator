@@ -113,6 +113,17 @@
                         </div>
                     </div>
                     
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="include_metadata" name="include_metadata" value="true">
+                            <label class="form-check-label" for="include_metadata">Include Metadata</label>
+                        </div>
+                        <div class="form-text">
+                            Generate and send metadata like isLowBattery, isHighTemperature, ss_active based on telemetry values.
+                            This metadata is used by Thingsboard rule chains to control device status.
+                        </div>
+                    </div>
+                    
                     <div class="d-grid mt-4">
                         {{ form.submit(class="btn btn-primary") }}
                     </div>
@@ -503,7 +514,8 @@
                     profile_name: profileName,
                     device_name: deviceName,
                     data: data,
-                    data_type: dataType
+                    data_type: dataType,
+                    include_metadata: document.getElementById('include_metadata').checked
                 })
             })
             .then(response => {

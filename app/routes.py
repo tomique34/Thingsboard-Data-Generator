@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from werkzeug.utils import secure_filename
 from app.forms import DeviceProfileForm, AttributeForm, GenerateDataForm, ConnectionForm, AutonomousGenerationForm
 from app.thingsboard_client import ThingsboardClient
+from app.metadata_util import get_metadata_generator
 import random
 import json
 import traceback
@@ -444,6 +445,15 @@ def generate_data(profile_name):
                         attributes[attr['name']] = value
                     else:  # telemetry
                         telemetry[attr['name']] = value
+                        
+                # Generate metadata based on telemetry values
+                include_metadata = request.form.get('include_metadata', 'false').lower() == 'true'
+                metadata = {}
+                
+                if include_metadata and data_type == 'telemetry':
+                    metadata_generator = get_metadata_generator(profile['name'])
+                    metadata = metadata_generator(telemetry)
+                    print(f"DEBUG: Generated metadata: {metadata}")
                 
                 print(f"DEBUG: Final data - Attributes: {attributes}, Telemetry: {telemetry}")
                 
@@ -458,7 +468,7 @@ def generate_data(profile_name):
                         
                     if telemetry:
                         print(f"DEBUG: Sending telemetry to device {device_id}")
-                        tb_client.send_telemetry(device_id, telemetry, timestamp)
+                        tb_client.send_telemetry(device_id, telemetry, timestamp, metadata if metadata else None)
                         
                     print("DEBUG: Data sent successfully!")
                 except Exception as inner_e:
@@ -482,7 +492,8 @@ def generate_data(profile_name):
                             'csrf_token': csrf_token,
                             'data': {
                                 'attributes': attributes,
-                                'telemetry': telemetry
+                                'telemetry': telemetry,
+                                'metadata': metadata
                             }
                         })
                     else:
@@ -502,7 +513,8 @@ def generate_data(profile_name):
                                       profile=profile, 
                                       form=form, 
                                       attributes=attributes,
-                                      telemetry=telemetry)
+                                      telemetry=telemetry,
+                                      metadata=metadata)
                                       
             except Exception as e:
                 error_msg = str(e)
@@ -644,6 +656,7 @@ def autonomous_send_data():
         device_name = data.get('device_name')
         device_data = data.get('data', {})
         data_type = data.get('data_type', 'telemetry')
+        include_metadata = data.get('include_metadata', False)
         
         # Validate input
         if not profile_name or not device_name or not device_data:
@@ -655,11 +668,18 @@ def autonomous_send_data():
         
         timestamp = int(time.time() * 1000)  # Current time in milliseconds
         
+        # Generate metadata if requested
+        metadata = {}
+        if include_metadata and data_type == 'telemetry':
+            metadata_generator = get_metadata_generator(profile_name)
+            metadata = metadata_generator(device_data)
+            print(f"DEBUG: Generated metadata for autonomous mode: {metadata}")
+        
         # Send data based on type
         if data_type == 'attributes':
             tb_client.send_attributes(device_id, device_data)
         else:  # telemetry
-            tb_client.send_telemetry(device_id, device_data, timestamp)
+            tb_client.send_telemetry(device_id, device_data, timestamp, metadata if metadata else None)
         
         return jsonify({'success': True, 'message': f'Data sent to {device_name}'})
     
