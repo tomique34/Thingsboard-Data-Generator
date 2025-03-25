@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Refreshing CSRF Token</title>
+    <script>
+        // On page load, store the new CSRF token and redirect back
+        document.addEventListener('DOMContentLoaded', function() {
+            const metaToken = document.querySelector('meta[name="csrf-token"]');
+            if (metaToken) {
+                const token = metaToken.getAttribute('content');
+                
+                // Store in localStorage for other pages to access
+                localStorage.setItem('tbdg_csrf_token', token);
+                
+                // Redirect back to previous page or device profiles if none
+                const returnUrl = new URLSearchParams(window.location.search).get('return_to');
+                window.location.href = returnUrl || '/device-profiles';
+            }
+        });
+    </script>
+</head>
+<body>
+    <p>Refreshing CSRF token...</p>
+</body>
+</html>

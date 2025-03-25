@@ -54,13 +54,40 @@ footer {
     animation: fadeIn 0.5s;
 }
 
+/* Autonomous Generation Feature Styles */
+.profile-row {
+    cursor: pointer;
+}
+
+.profile-row:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+#generation-active-alert {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}
+
+#activity-logs tr {
+    transition: background-color 0.5s ease;
+}
+
+#activity-logs tr:first-child {
+    animation: fadeIn 1s;
+}
+
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }

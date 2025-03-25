@@ -1,5 +1,47 @@
 {% extends 'base.html' %}
 
+{% block extra_head %}
+<!-- Auto Generate Data Script -->
+<script src="{{ url_for('static', filename='js/auto_generate.js') }}"></script>
+
+<!-- Debug styles -->
+<style>
+    #debug-panel {
+        display: none;
+        margin-top: 20px;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 15px;
+        font-family: monospace;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    #debug-panel.show {
+        display: block;
+    }
+    
+    #debug-panel .log-item {
+        margin-bottom: 5px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+    }
+    
+    #debug-panel .log-success {
+        color: green;
+    }
+    
+    #debug-panel .log-error {
+        color: red;
+    }
+    
+    #debug-panel .log-info {
+        color: blue;
+    }
+</style>
+{% endblock %}
+
 {% block title %}Generate Data for {{ profile.name }} - Thingsboard Data Generator{% endblock %}
 
 {% block content %}
@@ -19,7 +61,7 @@
                 <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Generation Settings</h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('main.generate_data', profile_name=profile.name) }}">
+                <form method="POST" action="{{ url_for('main.generate_data', profile_name=profile.name) }}" id="data-form">
                     {{ form.hidden_tag() }}
                     
                     <div class="mb-3">
@@ -49,6 +91,16 @@
                         {% endif %}
                         <small class="form-text text-muted">
                             Telemetry data includes timestamps, attributes are persistent.
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="include_metadata" name="include_metadata" value="true">
+                            <label class="form-check-label" for="include_metadata">Include Metadata</label>
+                        </div>
+                        <small class="form-text text-muted">
+                            Generate and send metadata like isLowBattery, isHighTemperature, ss_active based on telemetry values.
                         </small>
                     </div>
                     
@@ -151,6 +203,28 @@
                         </div>
                     {% endif %}
                     
+                    {% if metadata %}
+                        <h6>Metadata:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Key</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for key, value in metadata.items() %}
+                                        <tr>
+                                            <td>{{ key }}</td>
+                                            <td><code>{{ value }}</code></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                    
                     <div class="d-grid gap-2 mt-3">
                         <button class="btn btn-primary" onclick="window.location.reload();">
                             <i class="fas fa-sync me-1"></i> Generate New Values
@@ -165,5 +239,106 @@
             </div>
         </div>
     </div>
+    
+    <!-- Debug Panel (initially hidden) -->
+    <div class="col-md-12" id="debug-panel">
+        <div class="d-flex justify-content-between mb-2">
+            <h6 class="mb-0">Debug Log</h6>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-debug">Clear</button>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="close-debug">Close</button>
+            </div>
+        </div>
+        <div id="debug-log"></div>
+    </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add debug toggle to page
+        const generateButton = document.querySelector('.card-body button.btn-success');
+        if (generateButton) {
+            const debugButton = document.createElement('button');
+            debugButton.type = 'button';
+            debugButton.className = 'btn btn-sm btn-outline-info mt-2';
+            debugButton.textContent = 'Show Debug Panel';
+            debugButton.id = 'toggle-debug';
+            generateButton.parentNode.appendChild(debugButton);
+            
+            // Add event listeners
+            debugButton.addEventListener('click', function() {
+                const debugPanel = document.getElementById('debug-panel');
+                debugPanel.classList.toggle('show');
+                this.textContent = debugPanel.classList.contains('show') ? 'Hide Debug Panel' : 'Show Debug Panel';
+            });
+            
+            document.getElementById('clear-debug').addEventListener('click', function() {
+                document.getElementById('debug-log').innerHTML = '';
+            });
+            
+            document.getElementById('close-debug').addEventListener('click', function() {
+                document.getElementById('debug-panel').classList.remove('show');
+                document.getElementById('toggle-debug').textContent = 'Show Debug Panel';
+            });
+        }
+        
+        // Override console.log for debugging
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleInfo = console.info;
+        
+        console.log = function(...args) {
+            addToDebugLog('log', args);
+            originalConsoleLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            addToDebugLog('error', args);
+            originalConsoleError.apply(console, args);
+        };
+        
+        console.info = function(...args) {
+            addToDebugLog('info', args);
+            originalConsoleInfo.apply(console, args);
+        };
+        
+        function addToDebugLog(type, args) {
+            const debugLog = document.getElementById('debug-log');
+            if (!debugLog) return;
+            
+            const logItem = document.createElement('div');
+            logItem.className = `log-item log-${type}`;
+            
+            // Format the message
+            const message = args.map(arg => {
+                if (typeof arg === 'object') {
+                    try {
+                        return JSON.stringify(arg);
+                    } catch (e) {
+                        return String(arg);
+                    }
+                }
+                return String(arg);
+            }).join(' ');
+            
+            // Add timestamp
+            const now = new Date();
+            const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}.${now.getMilliseconds().toString().padStart(3, '0')}`;
+            
+            logItem.textContent = `[${timestamp}] ${message}`;
+            debugLog.prepend(logItem);
+            
+            // Limit to 100 items
+            const items = debugLog.querySelectorAll('.log-item');
+            if (items.length > 100) {
+                for (let i = 100; i < items.length; i++) {
+                    items[i].remove();
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

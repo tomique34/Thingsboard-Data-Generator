@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SelectField, IntegerField, FloatField, SubmitField
-from wtforms.validators import DataRequired, Optional, NumberRange, Length
+from wtforms import StringField, PasswordField, SelectField, IntegerField, FloatField, SubmitField, BooleanField
+from wtforms.validators import DataRequired, Optional, NumberRange, Length, ValidationError
 
 
 class ConnectionForm(FlaskForm):
@@ -45,3 +45,32 @@ class GenerateDataForm(FlaskForm):
                           ],
                           validators=[DataRequired()])
     submit = SubmitField('Generate & Send Data')
+
+
+class AutonomousGenerationForm(FlaskForm):
+    """Form for autonomous data generation"""
+    # Device Configuration
+    generate_device_names = BooleanField('Generate Random Device Names')
+    device_name_prefix = StringField('Device Name Prefix', default='TBDG_')
+    
+    # Timing Configuration
+    interval_value = IntegerField('Interval Value', validators=[DataRequired(), NumberRange(min=1)], default=10)
+    interval_unit = SelectField('Interval Unit', 
+                         choices=[
+                             ('seconds', 'Seconds'),
+                             ('minutes', 'Minutes'),
+                             ('hours', 'Hours')
+                         ],
+                         default='seconds',
+                         validators=[DataRequired()])
+    
+    # Data Configuration
+    data_type = SelectField('Data Type', 
+                          choices=[
+                              ('telemetry', 'Telemetry'),
+                              ('attributes', 'Attributes')
+                          ],
+                          default='telemetry',
+                          validators=[DataRequired()])
+    
+    submit = SubmitField('Configure Devices')

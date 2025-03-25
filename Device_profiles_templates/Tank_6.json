@@ -1,0 +1,42 @@
+{
+  "profiles": [
+    {
+      "name": "Tank 6",
+      "attributes": [
+        {
+          "name": "battery",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 100.0,
+          "options": []
+        },
+        {
+          "name": "fuelHeight",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 1000.0,
+          "options": []
+        },
+        {
+          "name": "fuelLevel",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 100.0,
+          "options": []
+        },
+        {
+          "name": "temperature",
+          "type": "number",
+          "min_value": -20.0,
+          "max_value": 60.0,
+          "options": []
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "exported_at": "2025-03-25T12:00:00",
+    "version": "1.0",
+    "description": "Tank 6 device profile for Thingsboard Data Generator"
+  }
+}
