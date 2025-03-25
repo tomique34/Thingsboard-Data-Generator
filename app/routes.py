@@ -1,7 +1,7 @@
 import os
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify, send_file, Response
 from werkzeug.utils import secure_filename
-from app.forms import DeviceProfileForm, AttributeForm, GenerateDataForm, ConnectionForm
+from app.forms import DeviceProfileForm, AttributeForm, GenerateDataForm, ConnectionForm, AutonomousGenerationForm
 from app.thingsboard_client import ThingsboardClient
 import random
 import json
@@ -9,6 +9,7 @@ import traceback
 from datetime import datetime
 import time
 import tempfile
+import uuid
 
 # Create blueprint
 main = Blueprint('main', __name__)
@@ -183,6 +184,10 @@ def import_profiles():
     
     # Parse the JSON file
     try:
+        # Debug information
+        print(f"DEBUG: Processing import request with form data: {request.form}")
+        print(f"DEBUG: File received: {file.filename}")
+        
         import_data = json.load(file)
         
         # Validate the structure of the import data
@@ -372,10 +377,18 @@ def delete_device_profile(profile_name):
 
 @main.route('/device-profile/<profile_name>/generate', methods=['GET', 'POST'])
 def generate_data(profile_name):
+    """Generate and send data for a specific device profile"""
     if not tb_client or not tb_client.is_logged_in():
         flash('Please connect to ThingsBoard first', 'warning')
         return redirect(url_for('main.index'))
-        
+    
+    # Debug incoming request
+    print(f"DEBUG: Generate data request for profile: {profile_name}")
+    print(f"DEBUG: Request method: {request.method}")
+    print(f"DEBUG: Headers: {request.headers}")
+    if request.method == 'POST':
+        print(f"DEBUG: Form data: {request.form}")
+    
     # Find profile by name
     profile = None
     for p in profile_data:
@@ -384,58 +397,141 @@ def generate_data(profile_name):
             break
     
     if not profile:
-        flash(f'Profile "{profile_name}" not found', 'danger')
+        error_msg = f'Profile "{profile_name}" not found'
+        print(f"ERROR: {error_msg}")
+        flash(error_msg, 'danger')
         return redirect(url_for('main.device_profiles'))
+    
     form = GenerateDataForm()
+    is_ajax_request = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
-    if form.validate_on_submit():
-        try:
-            device_name = form.device_name.data
-            device_id = None
-            
-            # Check if device exists, or create it
-            device = tb_client.get_or_create_device(device_name)
-            
-            # Debug the device object
-            print(f"DEBUG in route: Device object: {device}")
-            
-            # Get device ID directly from our device object
-            device_id = device['id']
-            
-            # Generate random values for each attribute
-            attributes = {}
-            telemetry = {}
-            
-            timestamp = int(time.time() * 1000)  # Current time in milliseconds
-            
-            for attr in profile['attributes']:
-                value = generate_random_value(attr)
+    if request.method == 'POST':
+        # Process the form even if validation isn't perfect (for AJAX)
+        if form.validate_on_submit() or is_ajax_request:
+            try:
+                # Always reset the random seed to current time
+                random.seed(int(time.time() * 1000))
                 
-                # Attributes don't have timestamps, telemetry does
-                if form.data_type.data == 'attributes':
-                    attributes[attr['name']] = value
-                else:  # telemetry
-                    telemetry[attr['name']] = value
-            
-            # Send data to ThingsBoard
-            if attributes:
-                tb_client.send_attributes(device_id, attributes)
+                # Get device name from form
+                device_name = form.device_name.data or request.form.get('device_name')
+                if not device_name:
+                    raise ValueError("Device name is required")
                 
-            if telemetry:
-                tb_client.send_telemetry(device_id, telemetry, timestamp)
+                # Get data type from form
+                data_type = form.data_type.data or request.form.get('data_type', 'telemetry')
+                
+                print(f"DEBUG: Processing for device: {device_name}, data_type: {data_type}")
+                
+                # Create or get device
+                device = tb_client.get_or_create_device(device_name)
+                device_id = device['id']
+                print(f"DEBUG: Device ID: {device_id}")
+                
+                # Generate random values for each attribute
+                attributes = {}
+                telemetry = {}
+                timestamp = int(time.time() * 1000)  # Current time in milliseconds
+                
+                # Debug info for profile
+                print(f"DEBUG: Profile attributes: {profile['attributes']}")
+                
+                for attr in profile['attributes']:
+                    value = generate_random_value(attr)
+                    print(f"DEBUG: Generated for {attr['name']}: {value}")
+                    
+                    # Attributes don't have timestamps, telemetry does
+                    if data_type == 'attributes':
+                        attributes[attr['name']] = value
+                    else:  # telemetry
+                        telemetry[attr['name']] = value
+                
+                print(f"DEBUG: Final data - Attributes: {attributes}, Telemetry: {telemetry}")
+                
+                # Send data to ThingsBoard
+                success = True
+                error_msg = None
+                
+                try:
+                    if attributes:
+                        print(f"DEBUG: Sending attributes to device {device_id}")
+                        tb_client.send_attributes(device_id, attributes)
+                        
+                    if telemetry:
+                        print(f"DEBUG: Sending telemetry to device {device_id}")
+                        tb_client.send_telemetry(device_id, telemetry, timestamp)
+                        
+                    print("DEBUG: Data sent successfully!")
+                except Exception as inner_e:
+                    success = False
+                    error_msg = str(inner_e)
+                    print(f"ERROR: Failed to send data: {error_msg}")
+                    print(traceback.format_exc())
+                
+                # Return response based on request type
+                if is_ajax_request:
+                    if success:
+                        # Include CSRF token in response for subsequent requests
+                        csrf_token = None
+                        if hasattr(form, 'csrf_token'):
+                            csrf_token = form.csrf_token.current_token
+
+                        return jsonify({
+                            'success': True,
+                            'message': f'Data sent to device {device_name}',
+                            'timestamp': timestamp,
+                            'csrf_token': csrf_token,
+                            'data': {
+                                'attributes': attributes,
+                                'telemetry': telemetry
+                            }
+                        })
+                    else:
+                        return jsonify({
+                            'success': False,
+                            'message': f'Error sending data: {error_msg}'
+                        }), 500
+                
+                # For regular form submissions
+                if success:
+                    flash(f'Data sent to ThingsBoard device "{device_name}" successfully', 'success')
+                else:
+                    flash(f'Error sending data: {error_msg}', 'danger')
+                
+                # Return the generated data for display
+                return render_template('generate_data.html', 
+                                      profile=profile, 
+                                      form=form, 
+                                      attributes=attributes,
+                                      telemetry=telemetry)
+                                      
+            except Exception as e:
+                error_msg = str(e)
+                print(f"ERROR: Exception in generate_data: {error_msg}")
+                print(traceback.format_exc())
+                
+                if is_ajax_request:
+                    return jsonify({
+                        'success': False,
+                        'message': f'Error: {error_msg}'
+                    }), 500
+                    
+                flash(f'Error processing request: {error_msg}', 'danger')
+        else:
+            # Handle validation errors
+            if is_ajax_request:
+                errors = {field: ', '.join(errors) for field, errors in form.errors.items()}
+                return jsonify({
+                    'success': False,
+                    'message': 'Validation error',
+                    'errors': errors
+                }), 400
             
-            flash(f'Data sent to ThingsBoard device "{device_name}" successfully', 'success')
-            
-            # Return the generated data for display
-            return render_template('generate_data.html', 
-                                 profile=profile, 
-                                 form=form, 
-                                 attributes=attributes,
-                                 telemetry=telemetry)
-        except Exception as e:
-            flash(f'Error sending data: {str(e)}', 'danger')
-            print(traceback.format_exc())
+            # Display errors in the form for regular submissions
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f'{getattr(form, field).label.text}: {error}', 'danger')
     
+    # Initial form load or re-render after errors
     return render_template('generate_data.html', profile=profile, form=form)
 
 
@@ -475,3 +571,106 @@ def generate_random_value(attribute):
     
     # Default fallback
     return "N/A"
+
+
+@main.route('/autonomous-generation', methods=['GET'])
+def autonomous_generation_select():
+    """
+    Select device profiles for autonomous data generation.
+    Displays a form where users can select one or more device profiles.
+    """
+    if not tb_client or not tb_client.is_logged_in():
+        flash('Please connect to ThingsBoard first', 'warning')
+        return redirect(url_for('main.index'))
+    
+    # Check if we have profiles
+    if not profile_data:
+        flash('Please create at least one device profile first', 'warning')
+        return redirect(url_for('main.device_profiles'))
+    
+    return render_template('autonomous_select.html', profiles=profile_data)
+
+
+@main.route('/autonomous-generation', methods=['POST'])
+def autonomous_generation_configure():
+    """
+    Configure autonomous generation for selected profiles.
+    Processes the selection and shows the configuration form.
+    """
+    if not tb_client or not tb_client.is_logged_in():
+        flash('Please connect to ThingsBoard first', 'warning')
+        return redirect(url_for('main.index'))
+    
+    # Get selected profiles
+    selected_profile_names = request.form.getlist('selected_profiles')
+    
+    if not selected_profile_names:
+        flash('Please select at least one device profile', 'warning')
+        return redirect(url_for('main.autonomous_generation_select'))
+    
+    # Get the full profile data for selected profiles
+    selected_profiles = []
+    for name in selected_profile_names:
+        for profile in profile_data:
+            if profile['name'] == name:
+                selected_profiles.append(profile)
+                break
+    
+    form = AutonomousGenerationForm()
+    
+    # Convert selected profiles to JSON for JavaScript
+    selected_profiles_json = json.dumps(selected_profiles)
+    
+    return render_template('autonomous_generate.html', 
+                          form=form, 
+                          selected_profiles=selected_profiles,
+                          selected_profiles_json=selected_profiles_json)
+
+
+@main.route('/api/autonomous-send-data', methods=['POST'])
+def autonomous_send_data():
+    """
+    API endpoint for sending data in autonomous mode.
+    Receives data via AJAX and sends it to ThingsBoard.
+    """
+    if not tb_client or not tb_client.is_logged_in():
+        return jsonify({'success': False, 'error': 'Not connected to ThingsBoard'}), 401
+    
+    # Get data from request
+    data = request.json
+    
+    try:
+        profile_name = data.get('profile_name')
+        device_name = data.get('device_name')
+        device_data = data.get('data', {})
+        data_type = data.get('data_type', 'telemetry')
+        
+        # Validate input
+        if not profile_name or not device_name or not device_data:
+            return jsonify({'success': False, 'error': 'Missing required data'}), 400
+        
+        # Get or create the device
+        device = tb_client.get_or_create_device(device_name)
+        device_id = device['id']
+        
+        timestamp = int(time.time() * 1000)  # Current time in milliseconds
+        
+        # Send data based on type
+        if data_type == 'attributes':
+            tb_client.send_attributes(device_id, device_data)
+        else:  # telemetry
+            tb_client.send_telemetry(device_id, device_data, timestamp)
+        
+        return jsonify({'success': True, 'message': f'Data sent to {device_name}'})
+    
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@main.route('/device-profiles/autonomous', methods=['GET'])
+def device_profile_autonomous():
+    """
+    Redirects to the autonomous generation page.
+    """
+    return redirect(url_for('main.autonomous_generation_select'))

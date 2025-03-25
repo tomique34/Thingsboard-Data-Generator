@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Select Profiles for Autonomous Generation - Thingsboard Data Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-robot me-2"></i>Autonomous Data Generator</h2>
+            <a href="{{ url_for('main.device_profiles') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Profiles
+            </a>
+        </div>
+    </div>
+    
+    <div class="col-md-12">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-check-square me-2"></i>Select Device Profiles</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Select one or more device profiles for automatic data generation. You can select multiple profiles to generate data in parallel. <strong>Click on a row to select a profile</strong>.
+                </div>
+                
+                <form method="POST" action="{{ url_for('main.autonomous_generation_configure') }}" id="select-form">
+                    
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 50px;"></th>
+                                    <th>Profile Name</th>
+                                    <th>Attributes</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for profile in profiles %}
+                                <tr class="profile-row" data-profile-name="{{ profile.name }}">
+                                    <td class="text-center">
+                                        <div class="form-check">
+                                            <input class="form-check-input profile-checkbox" type="checkbox"
+                                                   name="selected_profiles" value="{{ profile.name }}" id="profile-{{ loop.index }}">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <label for="profile-{{ loop.index }}" class="fw-bold mb-0">{{ profile.name }}</label>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ profile.attributes|length }} attributes</span>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            {% if profile.attributes|length > 0 %}
+                                                {{ profile.attributes|map(attribute='name')|join(', ') }}
+                                            {% else %}
+                                                No attributes defined
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="select-all">
+                            <label class="form-check-label" for="select-all">
+                                Select All Profiles
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" id="continue-button">
+                            <i class="fas fa-arrow-right me-1"></i> Continue with Selected Profiles
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const profileCheckboxes = document.querySelectorAll('.profile-checkbox');
+        const selectAllCheckbox = document.getElementById('select-all');
+        const continueButton = document.getElementById('continue-button');
+        const profileRows = document.querySelectorAll('.profile-row');
+        const selectForm = document.getElementById('select-form');
+        
+        // Setup form submission validation
+        selectForm.addEventListener('submit', function(e) {
+            let anyChecked = false;
+            profileCheckboxes.forEach(function(checkbox) {
+                if (checkbox.checked) {
+                    anyChecked = true;
+                }
+            });
+            
+            if (!anyChecked) {
+                e.preventDefault();
+                alert('Please select at least one device profile.');
+            }
+        });
+        
+        // Add click event to profile rows
+        profileRows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Don't toggle if clicking on the checkbox directly
+                if (e.target.type !== 'checkbox') {
+                    const checkbox = this.querySelector('.profile-checkbox');
+                    checkbox.checked = !checkbox.checked;
+                }
+            });
+        });
+        
+        // Add change event to select all checkbox
+        selectAllCheckbox.addEventListener('change', function() {
+            profileCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+        
+        // Check if any checkbox is already checked (auto-selected)
+        setTimeout(function() {
+            let checkedCount = 0;
+            profileCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    checkedCount++;
+                }
+            });
+            
+            // Update select all checkbox if all are selected
+            if (checkedCount === profileCheckboxes.length && profileCheckboxes.length > 0) {
+                selectAllCheckbox.checked = true;
+            }
+        }, 100);
+    });
+</script>
+{% endblock %}

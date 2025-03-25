@@ -2,6 +2,7 @@ import requests
 import json
 import time
 import logging
+import traceback
 from tb_rest_client.rest_client_pe import RestClientPE
 from tb_rest_client.rest import ApiException
 
@@ -139,6 +140,12 @@ class ThingsboardClient:
             self.login()
         
         try:
+            # Ensure the values are correct format for Thingsboard
+            # Convert boolean values to strings if necessary
+            for key, value in attributes.items():
+                if isinstance(value, bool):
+                    attributes[key] = str(value).lower()  # Convert True/False to 'true'/'false'
+            
             # Print debug info to help troubleshoot
             print(f"DEBUG: Using device_id for attributes: {device_id}")
             print(f"DEBUG: Sending attributes: {attributes}")
@@ -160,11 +167,16 @@ class ThingsboardClient:
                 }
                 response = requests.post(url, headers=headers, json=attributes)
                 if response.status_code != 200:
+                    print(f"ERROR: HTTP status {response.status_code}, response: {response.text}")
                     raise Exception(f"HTTP Error: {response.status_code} - {response.text}")
                 
+                print(f"DEBUG: Direct API call response: {response.status_code}")
+            
+            print(f"DEBUG: Attributes sent successfully for device: {device_id}")
             return True
         except Exception as e:
-            logging.error(f"Error sending attributes: {e}")
+            print(f"ERROR: Failed to send attributes: {str(e)}")
+            print(traceback.format_exc())
             raise Exception(f"Error sending attributes: {e}")
     
     def send_telemetry(self, device_id, telemetry, timestamp=None):
@@ -177,6 +189,12 @@ class ThingsboardClient:
             if timestamp is None:
                 timestamp = int(time.time() * 1000)  # Current time in milliseconds
             
+            # Ensure the values are correct format for Thingsboard
+            # Convert boolean values to strings if necessary
+            for key, value in telemetry.items():
+                if isinstance(value, bool):
+                    telemetry[key] = str(value).lower()  # Convert True/False to 'true'/'false'
+            
             # Format the telemetry data
             telemetry_data = {
                 "ts": timestamp,
@@ -186,7 +204,6 @@ class ThingsboardClient:
             # Print debug info to help troubleshoot
             print(f"DEBUG: Using device_id: {device_id}")
             print(f"DEBUG: Sending telemetry: {telemetry_data}")
-            print(f"DEBUG: Client methods: {dir(self.client)}")
             
             # Try alternative methods for sending telemetry
             if hasattr(self.client, 'save_device_telemetry'):
@@ -206,11 +223,16 @@ class ThingsboardClient:
                 # For direct API call, we don't need to wrap in ts/values
                 response = requests.post(url, headers=headers, json=telemetry)
                 if response.status_code != 200:
+                    print(f"ERROR: HTTP status {response.status_code}, response: {response.text}")
                     raise Exception(f"HTTP Error: {response.status_code} - {response.text}")
+                
+                print(f"DEBUG: Direct API call response: {response.status_code}")
             
+            print(f"DEBUG: Telemetry sent successfully for device: {device_id}")
             return True
         except Exception as e:
-            logging.error(f"Error sending telemetry: {e}")
+            print(f"ERROR: Failed to send telemetry: {str(e)}")
+            print(traceback.format_exc())
             raise Exception(f"Error sending telemetry: {e}")
     
     def get_device_profiles(self):

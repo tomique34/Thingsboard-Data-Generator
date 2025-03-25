@@ -1,0 +1,627 @@
+{% extends 'base.html' %}
+
+{% block title %}Autonomous Data Generator - Thingsboard Data Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-robot me-2"></i>Autonomous Data Generator</h2>
+            <a href="{{ url_for('main.device_profiles') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Profiles
+            </a>
+        </div>
+    </div>
+    
+    <!-- Setup Form -->
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Generation Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="setup-form" data-csrf-exempt="true">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <h6>Selected Device Profiles:</h6>
+                        <ul class="list-group">
+                            {% for profile in selected_profiles %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ profile.name }}
+                                    <span class="badge bg-primary rounded-pill">{{ profile.attributes|length }} attributes</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <input type="hidden" name="selected_profiles" id="selected-profiles" 
+                               value="{{ selected_profiles_json }}">
+                    </div>
+                    
+                    <hr>
+                    <h6>Device Configuration</h6>
+                    
+                    <div class="mb-3 form-check">
+                        {{ form.generate_device_names(class="form-check-input") }}
+                        {{ form.generate_device_names.label(class="form-check-label") }}
+                        <div class="form-text">
+                            If checked, devices will be named automatically in the format: [Prefix]_[ProfileName]_[UUID]
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3" id="prefix-group">
+                        {{ form.device_name_prefix.label(class="form-label") }}
+                        {{ form.device_name_prefix(class="form-control") }}
+                        <div class="form-text">
+                            Prefix for automatically generated device names
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h6>Timing Configuration</h6>
+                    
+                    <div class="mb-3 row">
+                        <div class="col-md-6">
+                            {{ form.interval_value.label(class="form-label") }}
+                            {{ form.interval_value(class="form-control") }}
+                            {% if form.interval_value.errors %}
+                            <div class="text-danger">
+                                {% for error in form.interval_value.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.interval_unit.label(class="form-label") }}
+                            {{ form.interval_unit(class="form-select") }}
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-text">
+                                How frequently to generate new data
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h6>Data Configuration</h6>
+                    
+                    <div class="mb-3">
+                        {{ form.data_type.label(class="form-label") }}
+                        {{ form.data_type(class="form-select") }}
+                        <div class="form-text">
+                            Telemetry data includes timestamps, attributes are persistent
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid mt-4">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Device Configuration Panel -->
+    <div class="col-md-6" id="device-config-panel" style="display: none;">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-microchip me-2"></i>Device Configuration</h5>
+            </div>
+            <div class="card-body">
+                <div id="device-config-form">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Configure device names for each selected profile
+                    </div>
+                    
+                    <form id="devices-form">
+                        <div id="device-inputs">
+                            <!-- Device inputs will be generated here by JavaScript -->
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="button" id="start-generation" class="btn btn-success btn-lg">
+                                <i class="fas fa-play me-2"></i>Start Data Generation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Generation Status Panel (initially hidden) -->
+    <div class="col-md-6" id="generation-status-panel" style="display: none;">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Generation Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success" id="generation-active-alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Active:</strong> Automatically generating data...
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Configuration:</h6>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Interval:</span>
+                            <span id="status-interval"></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Data Type:</span>
+                            <span id="status-datatype"></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Active Devices:</span>
+                            <span id="status-devices"></span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Generation Statistics:</h6>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Started At:</span>
+                            <span id="status-started"></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Running Time:</span>
+                            <span id="status-runtime"></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Messages Sent:</span>
+                            <span id="status-count"></span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Next Generation:</span>
+                            <span id="status-next"></span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="d-grid mt-4">
+                    <button type="button" id="stop-generation" class="btn btn-danger btn-lg">
+                        <i class="fas fa-stop me-2"></i>Stop Data Generation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity Panel -->
+    <div class="col-md-12" id="activity-panel" style="display: none;">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped" id="activity-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Device</th>
+                                <th>Profile</th>
+                                <th>Data</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activity-logs">
+                            <!-- Activity logs will be added here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <button type="button" class="btn btn-sm btn-secondary" id="clear-logs">
+                        <i class="fas fa-trash me-1"></i>Clear Logs
+                    </button>
+                    <span class="text-muted">Showing latest 50 activities</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Global state variables
+        let generationActive = false;
+        let generationTimer = null;
+        let messageCount = 0;
+        let startTime = null;
+        let nextGenerationTime = null;
+        let generationProfiles = [];
+        let generationDevices = {};
+        let selectedProfiles = JSON.parse('{{ selected_profiles_json|safe }}');
+        
+        // DOM Element References
+        const setupForm = document.getElementById('setup-form');
+        const deviceConfigPanel = document.getElementById('device-config-panel');
+        const deviceInputs = document.getElementById('device-inputs');
+        const startButton = document.getElementById('start-generation');
+        const stopButton = document.getElementById('stop-generation');
+        const generateNamesCheckbox = document.getElementById('generate_device_names');
+        const prefixGroup = document.getElementById('prefix-group');
+        const generationStatusPanel = document.getElementById('generation-status-panel');
+        const activityPanel = document.getElementById('activity-panel');
+        const activityLogs = document.getElementById('activity-logs');
+        const clearLogsButton = document.getElementById('clear-logs');
+        
+        // Toggle device name input based on the "generate random names" checkbox
+        generateNamesCheckbox.addEventListener('change', toggleDeviceNameInputs);
+        
+        // Setup form validation and submission handling
+        setupForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+            showDeviceConfigForm(); // Show device configuration
+        });
+        
+        // Start generation button click handler
+        startButton.addEventListener('click', startGeneration);
+        
+        // Stop generation button click handler
+        stopButton.addEventListener('click', stopGeneration);
+        
+        // Clear logs button click handler
+        clearLogsButton.addEventListener('click', function() {
+            activityLogs.innerHTML = '';
+        });
+        
+        // Function to toggle visibility of device name inputs based on the "generate random names" checkbox
+        function toggleDeviceNameInputs() {
+            const generateNames = generateNamesCheckbox.checked;
+            
+            if (generateNames) {
+                prefixGroup.style.display = 'block';
+            } else {
+                prefixGroup.style.display = 'none';
+            }
+        }
+        
+        // Initial call to set the correct state
+        toggleDeviceNameInputs();
+        
+        // Function to show the device configuration form
+        function showDeviceConfigForm() {
+            const generateNames = generateNamesCheckbox.checked;
+            const prefix = document.getElementById('device_name_prefix').value;
+            
+            // Clear any existing inputs
+            deviceInputs.innerHTML = '';
+            
+            // Create inputs for each profile
+            selectedProfiles.forEach(profile => {
+                const profileDiv = document.createElement('div');
+                profileDiv.className = 'mb-4';
+                
+                profileDiv.innerHTML = `
+                    <h6 class="mb-2">${profile.name}</h6>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Device Name</span>
+                        <input type="text" class="form-control device-name" 
+                               data-profile="${profile.name}" 
+                               ${generateNames ? 'disabled' : 'required'}
+                               value="${generateNames ? `${prefix}${profile.name}_${generateUUID().substring(0, 8)}` : ''}">
+                    </div>
+                    <div class="form-text mb-2">
+                        Device for profile "${profile.name}" (${profile.attributes.length} attributes)
+                    </div>
+                `;
+                
+                deviceInputs.appendChild(profileDiv);
+            });
+            
+            // Show the device configuration panel
+            deviceConfigPanel.style.display = 'block';
+        }
+        
+        // Function to generate a UUID for device names
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
+        
+        // Function to start the autonomous data generation
+        function startGeneration() {
+            // Gather configuration from the form
+            const intervalValue = parseInt(document.getElementById('interval_value').value);
+            const intervalUnit = document.getElementById('interval_unit').value;
+            const dataType = document.getElementById('data_type').value;
+            
+            // Validate inputs
+            if (!intervalValue || intervalValue <= 0) {
+                alert('Please enter a valid interval value greater than 0');
+                return;
+            }
+            
+            // Calculate interval in milliseconds
+            let intervalMs = intervalValue * 1000; // Default to seconds
+            if (intervalUnit === 'minutes') {
+                intervalMs = intervalValue * 60 * 1000;
+            } else if (intervalUnit === 'hours') {
+                intervalMs = intervalValue * 60 * 60 * 1000;
+            }
+            
+            // Gather device names
+            const deviceInputElements = document.querySelectorAll('.device-name');
+            generationDevices = {};
+            
+            deviceInputElements.forEach(input => {
+                const profileName = input.getAttribute('data-profile');
+                const deviceName = input.value.trim();
+                
+                if (deviceName) {
+                    generationDevices[profileName] = deviceName;
+                }
+            });
+            
+            // Validate that we have at least one device configured
+            if (Object.keys(generationDevices).length === 0) {
+                alert('Please configure at least one device name');
+                return;
+            }
+            
+            // Store profiles for generation
+            generationProfiles = selectedProfiles;
+            
+            // Initialize counters
+            messageCount = 0;
+            startTime = new Date();
+            nextGenerationTime = new Date(startTime.getTime() + intervalMs);
+            
+            // Update UI
+            updateGenerationStatus(intervalValue, intervalUnit, dataType);
+            
+            // Hide the configuration panels and show the status panel
+            deviceConfigPanel.style.display = 'none';
+            generationStatusPanel.style.display = 'block';
+            activityPanel.style.display = 'block';
+            
+            // Set the generation as active
+            generationActive = true;
+            
+            // Start the data generation loop
+            generateData(dataType);
+            generationTimer = setInterval(() => {
+                if (generationActive) {
+                    generateData(dataType);
+                    nextGenerationTime = new Date(Date.now() + intervalMs);
+                    updateGenerationStatus(intervalValue, intervalUnit, dataType);
+                }
+            }, intervalMs);
+            
+            // Start the runtime counter update
+            setInterval(updateRuntimeCounter, 1000);
+        }
+        
+        // Function to stop the autonomous data generation
+        function stopGeneration() {
+            generationActive = false;
+            
+            if (generationTimer) {
+                clearInterval(generationTimer);
+                generationTimer = null;
+            }
+            
+            // Show a confirmation message
+            const stopTime = new Date();
+            const runTime = formatTimeDifference(startTime, stopTime);
+            
+            // Add a stop entry to the activity log
+            const logEntry = document.createElement('tr');
+            logEntry.className = 'table-warning';
+            logEntry.innerHTML = `
+                <td>${formatTime(stopTime)}</td>
+                <td colspan="2"><strong>Generation Stopped</strong></td>
+                <td>Total messages: ${messageCount}</td>
+                <td>Runtime: ${runTime}</td>
+            `;
+            activityLogs.prepend(logEntry);
+            
+            // Allow the user to start again
+            deviceConfigPanel.style.display = 'block';
+            generationStatusPanel.style.display = 'none';
+        }
+        
+        // Function to generate and send data for all configured devices
+        function generateData(dataType) {
+            generationProfiles.forEach(profile => {
+                const deviceName = generationDevices[profile.name];
+                
+                if (deviceName) {
+                    // Generate data object from profile attributes
+                    const generatedData = {};
+                    
+                    profile.attributes.forEach(attr => {
+                        generatedData[attr.name] = generateRandomValue(attr);
+                    });
+                    
+                    // Send the data to the server
+                    sendGeneratedData(profile.name, deviceName, generatedData, dataType);
+                }
+            });
+        }
+        
+        // Function to send the generated data to the server
+        function sendGeneratedData(profileName, deviceName, data, dataType) {
+            // Send the data to the server
+            fetch('/api/autonomous-send-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    profile_name: profileName,
+                    device_name: deviceName,
+                    data: data,
+                    data_type: dataType
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                // Log the result
+                const timestamp = new Date();
+                logActivity(timestamp, deviceName, profileName, data, result.success);
+                
+                // Increment message counter
+                messageCount++;
+                document.getElementById('status-count').textContent = messageCount;
+            })
+            .catch(error => {
+                console.error('Error sending data:', error);
+                
+                // Log the error
+                const timestamp = new Date();
+                logActivity(timestamp, deviceName, profileName, data, false, error.message);
+            });
+        }
+        
+        // Function to generate a random value based on the attribute definition
+        function generateRandomValue(attribute) {
+            const attrType = attribute.type;
+            
+            if (attrType === 'string' && attribute.options && attribute.options.length > 0) {
+                // Select random option from list
+                return attribute.options[Math.floor(Math.random() * attribute.options.length)];
+            }
+            
+            else if (attrType === 'number') {
+                const minVal = parseFloat(attribute.min_value !== null ? attribute.min_value : 0);
+                const maxVal = parseFloat(attribute.max_value !== null ? attribute.max_value : 100);
+                
+                // Generate random float
+                const value = Math.random() * (maxVal - minVal) + minVal;
+                
+                // Round to 2 decimal places
+                return Math.round(value * 100) / 100;
+            }
+            
+            else if (attrType === 'integer') {
+                const minVal = parseInt(attribute.min_value !== null ? attribute.min_value : 0);
+                const maxVal = parseInt(attribute.max_value !== null ? attribute.max_value : 100);
+                
+                // Generate random integer
+                return Math.floor(Math.random() * (maxVal - minVal + 1) + minVal);
+            }
+            
+            else if (attrType === 'boolean') {
+                // Generate random boolean
+                return Math.random() >= 0.5;
+            }
+            
+            else if (attrType === 'string' && (!attribute.options || attribute.options.length === 0)) {
+                // Generate random string
+                const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                const length = Math.floor(Math.random() * 6) + 5; // Length between 5 and 10
+                let result = '';
+                
+                for (let i = 0; i < length; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                
+                return result;
+            }
+            
+            // Default fallback
+            return "N/A";
+        }
+        
+        // Function to log activity to the table
+        function logActivity(timestamp, deviceName, profileName, data, success, errorMessage = null) {
+            const logEntry = document.createElement('tr');
+            logEntry.className = success ? 'table-success' : 'table-danger';
+            
+            // Convert data object to a readable string
+            const dataString = Object.entries(data)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join(', ');
+            
+            logEntry.innerHTML = `
+                <td>${formatTime(timestamp)}</td>
+                <td>${deviceName}</td>
+                <td>${profileName}</td>
+                <td><small>${dataString}</small></td>
+                <td>${success ? '<span class="text-success">✓ Sent</span>' : 
+                              '<span class="text-danger">✗ Failed</span>' + 
+                              (errorMessage ? `<br><small>${errorMessage}</small>` : '')}
+                </td>
+            `;
+            
+            // Add to the beginning of the log
+            activityLogs.prepend(logEntry);
+            
+            // Limit to 50 entries
+            const rows = activityLogs.getElementsByTagName('tr');
+            if (rows.length > 50) {
+                activityLogs.removeChild(rows[rows.length - 1]);
+            }
+        }
+        
+        // Function to update the generation status display
+        function updateGenerationStatus(intervalValue, intervalUnit, dataType) {
+            // Update the status information
+            document.getElementById('status-interval').textContent = `${intervalValue} ${intervalUnit}`;
+            document.getElementById('status-datatype').textContent = dataType.charAt(0).toUpperCase() + dataType.slice(1);
+            document.getElementById('status-devices').textContent = Object.keys(generationDevices).length;
+            document.getElementById('status-started').textContent = formatTime(startTime);
+            document.getElementById('status-count').textContent = messageCount;
+            document.getElementById('status-next').textContent = formatTime(nextGenerationTime);
+        }
+        
+        // Function to update the runtime counter
+        function updateRuntimeCounter() {
+            if (generationActive && startTime) {
+                const now = new Date();
+                document.getElementById('status-runtime').textContent = formatTimeDifference(startTime, now);
+                
+                // Also update the next generation countdown
+                if (nextGenerationTime) {
+                    const timeLeft = Math.max(0, nextGenerationTime - now);
+                    const secondsLeft = Math.floor(timeLeft / 1000);
+                    
+                    if (secondsLeft < 60) {
+                        document.getElementById('status-next').textContent = 
+                            `${formatTime(nextGenerationTime)} (in ${secondsLeft}s)`;
+                    } else {
+                        document.getElementById('status-next').textContent = formatTime(nextGenerationTime);
+                    }
+                }
+            }
+        }
+        
+        // Helper function to format a date object to a readable time string
+        function formatTime(date) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        
+        // Helper function to format the time difference between two dates
+        function formatTimeDifference(startDate, endDate) {
+            const diff = Math.floor((endDate - startDate) / 1000); // Difference in seconds
+            
+            const hours = Math.floor(diff / 3600);
+            const minutes = Math.floor((diff % 3600) / 60);
+            const seconds = diff % 60;
+            
+            const parts = [];
+            if (hours > 0) parts.push(`${hours}h`);
+            if (minutes > 0 || hours > 0) parts.push(`${minutes}m`);
+            parts.push(`${seconds}s`);
+            
+            return parts.join(' ');
+        }
+    });
+</script>
+{% endblock %}

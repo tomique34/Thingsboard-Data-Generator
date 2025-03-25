@@ -1,0 +1,7 @@
+To commit the changes with the message "Auto data generation for single and multiple sensors", please run these commands in the terminal:
+
+cd /Users/tomasvince/Downloads/Thingsboard-Data-Generator
+git add app/static/js/auto_generate.js
+git commit -m "Auto data generation for single and multiple sensors"
+
+This will commit the updated auto_generate.js file with the specified commit message.
