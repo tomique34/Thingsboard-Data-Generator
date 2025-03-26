@@ -1,6 +1,6 @@
 # Device Profiles Templates
 
-This directory contains ready-to-use device profile templates for the Thingsboard Data Generator. These templates can be imported directly into the application to quickly set up common IoT device profiles.
+This directory contains ready-to-use device profile templates for the Thingsboard Data Generator. These templates can be imported directly into the application to quickly set up common IoT device profiles with enhanced persistent attributes and metadata support.
 
 ## Available Templates
 
@@ -13,6 +13,19 @@ This directory contains ready-to-use device profile templates for the Thingsboar
 7. **GPS_Tracker.json** - Location tracking device with GPS coordinates and status
 8. **Motion_Sensor.json** - Motion detection sensor with additional environmental metrics
 
+## New Features: Persistent Attributes and Metadata
+
+### Persistent Attributes
+Persistent attributes are now supported, allowing you to:
+- Define static or rarely changing device characteristics
+- Maintain consistent device-specific information across sessions
+- Store metadata that doesn't change with each telemetry update
+
+### Metadata Enhancements
+- Expanded metadata support for more detailed device profile description
+- Version tracking for device profile templates
+- Additional contextual information for better device management
+
 ## How to Use
 
 To import a device profile template:
@@ -24,37 +37,70 @@ To import a device profile template:
 
 ## Customizing Templates
 
-You can modify these templates or create your own by following this structure:
+You can modify these templates or create your own by following this enhanced structure:
 
 ```json
 {
   "profiles": [
     {
       "name": "Your Device Name",
-      "attributes": [
+      "persistent_attributes": [
         {
-          "name": "attribute_name",
-          "type": "number|integer|string|boolean",
-          "min_value": minimum_value_for_numeric_types,
-          "max_value": maximum_value_for_numeric_types,
-          "options": ["option1", "option2"] 
+          "name": "device_location",
+          "type": "string",
+          "value": "Main Building, Floor 2"
+        },
+        {
+          "name": "installation_date",
+          "type": "string",
+          "value": "2024-03-26"
+        }
+      ],
+      "telemetry_attributes": [
+        {
+          "name": "temperature",
+          "type": "number",
+          "min_value": -50,
+          "max_value": 100
         }
       ]
     }
   ],
   "metadata": {
     "exported_at": "timestamp",
-    "version": "1.0",
-    "description": "Description of your device profile"
+    "version": "2.0",
+    "description": "Enhanced device profile with persistent attributes",
+    "device_type": "environmental_sensor",
+    "manufacturer": "Your Company Name",
+    "compatibility": ["ThingsBoard PE", "IoT Platform"]
   }
 }
 ```
 
 ## Attribute Types
 
-- **number**: Floating-point values (temperature, humidity, etc.)
-- **integer**: Whole number values (count, level, etc.)
-- **string**: Text values, with optional predefined options (mode, state, etc.)
-- **boolean**: True/false values (on/off, detected/not detected, etc.)
+- **Persistent Attributes**:
+  - Remain constant or change infrequently
+  - Stored separately from frequently changing telemetry data
+  - Useful for device-specific configuration and identification
 
-For more information on creating custom device profiles, refer to the main application documentation.
+- **Telemetry Attributes**:
+  - **number**: Floating-point values (temperature, humidity, etc.)
+  - **integer**: Whole number values (count, level, etc.)
+  - **string**: Text values, with optional predefined options (mode, state, etc.)
+  - **boolean**: True/false values (on/off, detected/not detected, etc.)
+
+## Best Practices
+
+- Use persistent attributes for:
+  - Device location
+  - Installation dates
+  - Manufacturer information
+  - Static configuration settings
+
+- Use telemetry attributes for:
+  - Sensor readings
+  - Current device state
+  - Frequently changing measurements
+
+For more information on creating custom device profiles and utilizing persistent attributes, refer to the main application documentation.

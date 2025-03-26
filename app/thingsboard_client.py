@@ -134,8 +134,8 @@ class ThingsboardClient:
             logging.error(f"Error getting/creating device: {e}")
             raise Exception(f"Error getting/creating device: {e}")
     
-    def send_attributes(self, device_id, attributes):
-        """Send attributes to a device"""
+    def send_attributes(self, device_id, attributes, scope="SERVER_SCOPE"):
+        """Send attributes to a device with specific scope"""
         if not self.logged_in:
             self.login()
         
@@ -148,7 +148,8 @@ class ThingsboardClient:
             
             # Print debug info to help troubleshoot
             print(f"DEBUG: Using device_id for attributes: {device_id}")
-            print(f"DEBUG: Sending attributes: {attributes}")
+            print(f"DEBUG: Sending attributes with scope {scope}: {attributes}")
+            print(f"DEBUG: These should appear in the Attributes tab, not in Latest telemetry")
             
             # Try alternative methods for sending attributes
             if hasattr(self.client, 'save_device_attributes'):
@@ -160,7 +161,7 @@ class ThingsboardClient:
             else:
                 # Last resort - try to use the REST API directly
                 base_url = self.base_url
-                url = f"{base_url}/api/plugins/telemetry/DEVICE/{device_id}/SERVER_SCOPE"
+                url = f"{base_url}/api/plugins/telemetry/DEVICE/{device_id}/{scope}"
                 headers = {
                     'Content-Type': 'application/json',
                     'X-Authorization': f'Bearer {self.get_auth_token()}'
@@ -190,10 +191,20 @@ class ThingsboardClient:
                 timestamp = int(time.time() * 1000)  # Current time in milliseconds
             
             # Ensure the values are correct format for Thingsboard
-            # Convert boolean values to strings if necessary
+            # Convert boolean values to strings if necessary and remove null values
+            # Create a new dict to avoid modifying during iteration
+            processed_telemetry = {}
             for key, value in telemetry.items():
-                if isinstance(value, bool):
-                    telemetry[key] = str(value).lower()  # Convert True/False to 'true'/'false'
+                if value is None:
+                    # Skip null values as Thingsboard can't parse them
+                    continue
+                elif isinstance(value, bool):
+                    processed_telemetry[key] = str(value).lower()  # Convert True/False to 'true'/'false'
+                else:
+                    processed_telemetry[key] = value
+            
+            # Replace original telemetry with processed values
+            telemetry = processed_telemetry
             
             # Add metadata if provided
             if metadata:
@@ -212,11 +223,20 @@ class ThingsboardClient:
             
             # Add metadata to telemetry data if provided
             if metadata:
-                telemetry_data["metadata"] = metadata
+                # Filter out null values from metadata
+                filtered_metadata = {}
+                for key, value in metadata.items():
+                    if value is not None:  # Skip null values
+                        filtered_metadata[key] = value
+                
+                if filtered_metadata:  # Only add if there's non-null data
+                    telemetry_data["metadata"] = filtered_metadata
             
             # Print debug info to help troubleshoot
             print(f"DEBUG: Using device_id: {device_id}")
-            print(f"DEBUG: Sending telemetry: {telemetry_data}")
+            print(f"DEBUG: Sending telemetry data: {telemetry_data}")
+            if metadata:
+                print(f"DEBUG: Including metadata: {metadata}")
             
             # Try alternative methods for sending telemetry
             if hasattr(self.client, 'save_device_telemetry'):

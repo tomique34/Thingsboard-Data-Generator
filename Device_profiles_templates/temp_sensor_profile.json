@@ -1,30 +1,89 @@
 {
-    "profiles": [
-      {
-        "name": "TVI-Temperature Sensor",
-        "attributes": [
-          {
-            "name": "temperature",
-            "type": "number",
-            "min_value": -40.0,
-            "max_value": 85.0,
-            "options": []
-          },
-          {
-            "name": "humidity",
-            "type": "number",
-            "min_value": 0.0,
-            "max_value": 100.0,
-            "options": []
-          },
-          {
-            "name": "battery_level",
-            "type": "integer",
-            "min_value": 0,
-            "max_value": 100,
-            "options": []
-          }
-        ]
-      }
-    ]  
+  "profiles": [
+    {
+      "name": "TVI-Temperature Sensor",
+      "telemetry": [
+        {
+          "name": "temperature",
+          "type": "number",
+          "min_value": -40.0,
+          "max_value": 85.0,
+          "options": []
+        },
+        {
+          "name": "humidity",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 100.0,
+          "options": []
+        },
+        {
+          "name": "battery_level",
+          "type": "integer",
+          "min_value": 0,
+          "max_value": 100,
+          "options": []
+        }
+      ],
+      "attributes": [
+        {
+          "name": "deviceModel",
+          "type": "string",
+          "default_value": "TVI-TS-1000",
+          "persist": true
+        },
+        {
+          "name": "sensorType",
+          "type": "string",
+          "default_value": "BME280",
+          "options": ["DHT11", "DHT22", "DS18B20", "BME280"],
+          "persist": true
+        },
+        {
+          "name": "location",
+          "type": "string",
+          "default_value": "Server Room",
+          "persist": true
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "default_value": true,
+          "persist": true
+        }
+      ],
+      "metadata": [
+        {
+          "name": "isLowBattery",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "isHighTemperature",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "lastReadingTimestamp",
+          "type": "integer",
+          "default_value": 1742487821073,
+          "persist": true
+        },
+        {
+          "name": "alertStatus",
+          "type": "string",
+          "default_value": "normal",
+          "options": ["normal", "warning", "alarm"],
+          "persist": true
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "exported_at": "2025-03-26T12:00:00",
+    "version": "1.1",
+    "description": "TVI Temperature Sensor profile with telemetry, attributes, and metadata"
+  }
 }

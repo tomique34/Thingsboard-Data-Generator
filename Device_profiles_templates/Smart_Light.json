@@ -2,7 +2,7 @@
   "profiles": [
     {
       "name": "Smart Light",
-      "attributes": [
+      "telemetry": [
         {
           "name": "state",
           "type": "string",
@@ -25,18 +25,104 @@
           "options": []
         },
         {
+          "name": "power_consumption",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 25.0,
+          "options": []
+        },
+        {
+          "name": "active_time",
+          "type": "integer",
+          "min_value": 0,
+          "max_value": 86400,
+          "options": []
+        }
+      ],
+      "attributes": [
+        {
           "name": "color_mode",
           "type": "string",
-          "min_value": null,
-          "max_value": null,
-          "options": ["white", "color", "temperature"]
+          "default_value": "white",
+          "options": ["white", "color", "temperature"],
+          "persist": true
+        },
+        {
+          "name": "deviceModel",
+          "type": "string",
+          "default_value": "SL-1000",
+          "persist": true
+        },
+        {
+          "name": "manufacturer",
+          "type": "string",
+          "default_value": "SmartHome Inc.",
+          "persist": true
+        },
+        {
+          "name": "location",
+          "type": "string",
+          "default_value": "Living Room",
+          "persist": true
+        },
+        {
+          "name": "supportsRGB",
+          "type": "boolean",
+          "default_value": true,
+          "persist": true
+        },
+        {
+          "name": "maxBrightness",
+          "type": "integer",
+          "default_value": 100,
+          "persist": true
+        }
+      ],
+      "metadata": [
+        {
+          "name": "isAvailable",
+          "type": "boolean",
+          "default_value": true,
+          "persist": true
+        },
+        {
+          "name": "lastInteractionTime",
+          "type": "integer",
+          "default_value": 1742485821073,
+          "persist": true
+        },
+        {
+          "name": "scheduleActive",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "rgb_color",
+          "type": "string",
+          "default_value": "#FFFFFF",
+          "persist": true
+        },
+        {
+          "name": "sceneMode",
+          "type": "string",
+          "default_value": "default",
+          "options": ["default", "reading", "movie", "party", "relax"],
+          "persist": true
+        },
+        {
+          "name": "firmwareStatus",
+          "type": "string",
+          "default_value": "up_to_date",
+          "options": ["up_to_date", "update_available", "updating"],
+          "persist": true
         }
       ]
     }
   ],
   "metadata": {
-    "exported_at": "2025-03-24T12:00:00",
-    "version": "1.0",
-    "description": "Smart Light profile for Thingsboard Data Generator"
+    "exported_at": "2025-03-26T12:00:00",
+    "version": "1.1",
+    "description": "Enhanced Smart Light profile with telemetry, attributes, and metadata for Thingsboard Data Generator"
   }
 }

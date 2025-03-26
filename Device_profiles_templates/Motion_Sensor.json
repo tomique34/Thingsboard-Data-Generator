@@ -2,7 +2,7 @@
   "profiles": [
     {
       "name": "Motion Sensor",
-      "attributes": [
+      "telemetry": [
         {
           "name": "motion_detected",
           "type": "boolean",
@@ -15,13 +15,6 @@
           "type": "integer",
           "min_value": 0,
           "max_value": 9999999999,
-          "options": []
-        },
-        {
-          "name": "sensitivity",
-          "type": "integer",
-          "min_value": 1,
-          "max_value": 10,
           "options": []
         },
         {
@@ -45,12 +38,93 @@
           "max_value": null,
           "options": []
         }
+      ],
+      "attributes": [
+        {
+          "name": "sensitivity",
+          "type": "integer",
+          "min_value": 1,
+          "max_value": 10,
+          "default_value": 7,
+          "persist": true
+        },
+        {
+          "name": "detection_mode",
+          "type": "string",
+          "default_value": "standard",
+          "options": ["low", "standard", "high", "pet_immune"],
+          "persist": true
+        },
+        {
+          "name": "installation_location",
+          "type": "string",
+          "default_value": "Main Entrance",
+          "persist": true
+        },
+        {
+          "name": "firmware_version",
+          "type": "string",
+          "default_value": "2.5.1",
+          "persist": true
+        },
+        {
+          "name": "detection_radius",
+          "type": "number",
+          "default_value": 8.5,
+          "persist": true
+        },
+        {
+          "name": "detection_angle",
+          "type": "integer",
+          "default_value": 110,
+          "persist": true
+        }
+      ],
+      "metadata": [
+        {
+          "name": "alarmTriggered",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "isLowBattery",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "operatingMode",
+          "type": "string",
+          "default_value": "active",
+          "options": ["active", "sleep", "test", "maintenance"],
+          "persist": true
+        },
+        {
+          "name": "alertLevel",
+          "type": "string",
+          "default_value": "normal",
+          "options": ["normal", "warning", "critical"],
+          "persist": true
+        },
+        {
+          "name": "lastMaintenanceDate",
+          "type": "string",
+          "default_value": "2025-01-20",
+          "persist": true
+        },
+        {
+          "name": "detectionCount",
+          "type": "integer",
+          "default_value": 157,
+          "persist": true
+        }
       ]
     }
   ],
   "metadata": {
-    "exported_at": "2025-03-24T12:00:00",
-    "version": "1.0",
-    "description": "Motion Sensor profile for Thingsboard Data Generator"
+    "exported_at": "2025-03-26T12:00:00",
+    "version": "1.1",
+    "description": "Enhanced Motion Sensor profile with telemetry, attributes, and metadata for Thingsboard Data Generator"
   }
 }

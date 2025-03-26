@@ -206,8 +206,8 @@ def import_profiles():
         
         for profile in import_data['profiles']:
             # Validate profile structure
-            if 'name' not in profile or 'attributes' not in profile:
-                flash(f'Skipping invalid profile: missing name or attributes', 'warning')
+            if 'name' not in profile or ('attributes' not in profile and 'telemetry' not in profile):
+                flash(f'Skipping invalid profile: missing name or attributes/telemetry', 'warning')
                 skipped_count += 1
                 continue
             
@@ -275,7 +275,9 @@ def create_device_profile():
         # Create new device profile
         new_profile = {
             'name': profile_name,
-            'attributes': []
+            'attributes': [],
+            'telemetry': [],
+            'metadata': []
         }
         profile_data.append(new_profile)
         current_profile = profile_name
@@ -313,18 +315,34 @@ def edit_device_profile(profile_name):
             'type': form.data_type.data,
             'min_value': form.min_value.data if form.min_value.data else None,
             'max_value': form.max_value.data if form.max_value.data else None,
-            'options': form.options.data.split(',') if form.options.data else []
+            'options': form.options.data.split(',') if form.options.data else [],
+            'default_value': form.default_value.data if form.default_value.data else None,
+            'persist': form.persist.data
         }
         
-        profile['attributes'].append(attribute)
-        flash(f'Attribute "{form.name.data}" added successfully', 'success')
+        # Determine which category to add to based on user selection
+        data_category = form.data_category.data
+        if data_category == 'telemetry':
+            if 'telemetry' not in profile:
+                profile['telemetry'] = []
+            profile['telemetry'].append(attribute)
+        elif data_category == 'attributes':
+            if 'attributes' not in profile:
+                profile['attributes'] = []
+            profile['attributes'].append(attribute)
+        elif data_category == 'metadata':
+            if 'metadata' not in profile:
+                profile['metadata'] = []
+            profile['metadata'].append(attribute)
+        
+        flash(f'Item "{form.name.data}" added successfully to {data_category}', 'success')
         return redirect(url_for('main.edit_device_profile', profile_name=profile_name))
     
     return render_template('edit_profile.html', profile=profile, form=form)
 
 
-@main.route('/device-profile/<profile_name>/attribute/<int:attr_index>/delete', methods=['POST'])
-def delete_attribute(profile_name, attr_index):
+@main.route('/device-profile/<profile_name>/item/<string:item_type>/<int:item_index>/delete', methods=['POST'])
+def delete_item(profile_name, item_type, item_index):
     if not tb_client or not tb_client.is_logged_in():
         flash('Please connect to ThingsBoard first', 'warning')
         return redirect(url_for('main.index'))
@@ -340,12 +358,13 @@ def delete_attribute(profile_name, attr_index):
         flash(f'Profile "{profile_name}" not found', 'danger')
         return redirect(url_for('main.device_profiles'))
     
-    if attr_index < 0 or attr_index >= len(profile['attributes']):
-        flash('Invalid attribute index', 'danger')
+    # Check if the item exists in the specified category
+    if item_type not in profile or item_index < 0 or item_index >= len(profile.get(item_type, [])):
+        flash(f'Invalid {item_type} index', 'danger')
     else:
-        attr_name = profile['attributes'][attr_index]['name']
-        del profile['attributes'][attr_index]
-        flash(f'Attribute "{attr_name}" deleted successfully', 'success')
+        item_name = profile[item_type][item_index]['name']
+        del profile[item_type][item_index]
+        flash(f'{item_type.capitalize()} "{item_name}" deleted successfully', 'success')
     
     return redirect(url_for('main.edit_device_profile', profile_name=profile_name))
 
@@ -429,46 +448,126 @@ def generate_data(profile_name):
                 print(f"DEBUG: Device ID: {device_id}")
                 
                 # Generate random values for each attribute
-                attributes = {}
                 telemetry = {}
+                attributes = {}
                 timestamp = int(time.time() * 1000)  # Current time in milliseconds
                 
                 # Debug info for profile
-                print(f"DEBUG: Profile attributes: {profile['attributes']}")
+                print(f"DEBUG: Profile attributes: {profile.get('attributes', [])}")
                 
-                for attr in profile['attributes']:
-                    value = generate_random_value(attr)
-                    print(f"DEBUG: Generated for {attr['name']}: {value}")
-                    
-                    # Attributes don't have timestamps, telemetry does
-                    if data_type == 'attributes':
-                        attributes[attr['name']] = value
-                    else:  # telemetry
-                        telemetry[attr['name']] = value
-                        
-                # Generate metadata based on telemetry values
+                # Get user options for what to include
+                include_attributes = request.form.get('include_attributes', 'true').lower() == 'true'
                 include_metadata = request.form.get('include_metadata', 'false').lower() == 'true'
+                
+                # Process attributes in the original format
+                for attr in profile.get('attributes', []):
+                    value = generate_random_value(attr)
+                    print(f"DEBUG: Generated for attribute {attr['name']}: {value}")
+                    attributes[attr['name']] = value
+                
+                # Support the new enhanced profile structure
+                for attr in profile.get('telemetry', []):
+                    value = generate_random_value(attr)
+                    print(f"DEBUG: Generated for telemetry {attr['name']}: {value}")
+                    telemetry[attr['name']] = value
+                
+                # Include attributes if requested
+                if include_attributes:
+                    # Add attributes from the profile
+                    for attr in profile.get('attributes', []):
+                        # Use default value if available, otherwise generate
+                        if 'default_value' in attr and attr['default_value'] is not None:
+                            attributes[attr['name']] = attr['default_value']
+                        else:
+                            attributes[attr['name']] = generate_random_value(attr)
+                        print(f"DEBUG: Added attribute {attr['name']}: {attributes[attr['name']]}")
+                        
+                    # For backward compatibility
+                    for attr in profile.get('client_attributes', []):
+                        # Use default value if available, otherwise generate
+                        if 'default_value' in attr and attr['default_value'] is not None:
+                            attributes[attr['name']] = attr['default_value']
+                        else:
+                            attributes[attr['name']] = generate_random_value(attr)
+                        print(f"DEBUG: Added client attribute {attr['name']}: {attributes[attr['name']]}")
+                    
+                    for attr in profile.get('server_attributes', []):
+                        # Use default value if available, otherwise generate
+                        if 'default_value' in attr and attr['default_value'] is not None:
+                            attributes[attr['name']] = attr['default_value']
+                        else:
+                            attributes[attr['name']] = generate_random_value(attr)
+                        print(f"DEBUG: Added server attribute {attr['name']}: {attributes[attr['name']]}")
+                
                 metadata = {}
                 
-                if include_metadata and data_type == 'telemetry':
-                    metadata_generator = get_metadata_generator(profile['name'])
-                    metadata = metadata_generator(telemetry)
-                    print(f"DEBUG: Generated metadata: {metadata}")
+                if include_metadata:
+                    # First check if we have predefined metadata in the profile
+                    if profile.get('metadata'):
+                        for meta in profile.get('metadata', []):
+                            if 'default_value' in meta and meta['default_value'] is not None:
+                                metadata[meta['name']] = meta['default_value']
+                            else:
+                                metadata[meta['name']] = generate_random_value(meta)
+                            print(f"DEBUG: Added metadata {meta['name']}: {metadata[meta['name']]}") 
+                    
+                    # Then use the metadata generator if available
+                    if telemetry:
+                        metadata_generator = get_metadata_generator(profile['name'])
+                        generated_metadata = metadata_generator(telemetry)
+                        # Merge with any predefined metadata
+                        metadata.update(generated_metadata)
+                        print(f"DEBUG: Generated metadata: {metadata}")
                 
-                print(f"DEBUG: Final data - Attributes: {attributes}, Telemetry: {telemetry}")
+                # Print debugging information
+                print(f"DEBUG: Final data - Telemetry: {telemetry}, Attributes: {attributes}, Metadata: {metadata}")
                 
                 # Send data to ThingsBoard
                 success = True
                 error_msg = None
                 
                 try:
-                    if attributes:
+                    # Filter out null values from telemetry
+                    cleaned_telemetry = {}
+                    for key, value in telemetry.items():
+                        if value is not None:  # Skip null values
+                            cleaned_telemetry[key] = value
+                    
+                    # Filter out null values from attributes
+                    cleaned_attributes = {}
+                    for key, value in attributes.items():
+                        if value is not None:  # Skip null values
+                            cleaned_attributes[key] = value
+                    
+                    # Filter out null values from metadata
+                    cleaned_metadata = {}
+                    if metadata:
+                        for key, value in metadata.items():
+                            if value is not None:  # Skip null values
+                                cleaned_metadata[key] = value
+                    
+                    # Determine which data to send based on the data_type
+                    if data_type == 'attributes':
                         print(f"DEBUG: Sending attributes to device {device_id}")
-                        tb_client.send_attributes(device_id, attributes)
+                        tb_client.send_attributes(device_id, cleaned_attributes)
+                    else: # telemetry
+                        # Send telemetry data - make sure we're only sending the telemetry fields, not attributes
+                        # Filter telemetry data to only include items defined in telemetry section
+                        telemetry_only = {}
+                        if profile and 'telemetry' in profile:
+                            telemetry_keys = [item['name'] for item in profile.get('telemetry', [])]
+                            telemetry_only = {k: v for k, v in cleaned_telemetry.items() if k in telemetry_keys}
+                            print(f"DEBUG: Filtered telemetry keys: {telemetry_keys}")
+                            print(f"DEBUG: Sending only telemetry data: {telemetry_only}")
                         
-                    if telemetry:
-                        print(f"DEBUG: Sending telemetry to device {device_id}")
-                        tb_client.send_telemetry(device_id, telemetry, timestamp, metadata if metadata else None)
+                        if telemetry_only:
+                            print(f"DEBUG: Sending telemetry to device {device_id}")
+                            tb_client.send_telemetry(device_id, telemetry_only, timestamp, cleaned_metadata if cleaned_metadata else None)
+                        
+                        # Always send attributes separately
+                        if cleaned_attributes:
+                            print(f"DEBUG: Sending attributes to device {device_id}")
+                            tb_client.send_attributes(device_id, cleaned_attributes)
                         
                     print("DEBUG: Data sent successfully!")
                 except Exception as inner_e:
@@ -491,8 +590,8 @@ def generate_data(profile_name):
                             'timestamp': timestamp,
                             'csrf_token': csrf_token,
                             'data': {
-                                'attributes': attributes,
                                 'telemetry': telemetry,
+                                'attributes': attributes,
                                 'metadata': metadata
                             }
                         })
@@ -512,8 +611,8 @@ def generate_data(profile_name):
                 return render_template('generate_data.html', 
                                       profile=profile, 
                                       form=form, 
-                                      attributes=attributes,
                                       telemetry=telemetry,
+                                      attributes=attributes,
                                       metadata=metadata)
                                       
             except Exception as e:
@@ -548,15 +647,15 @@ def generate_data(profile_name):
 
 
 def generate_random_value(attribute):
-    attr_type = attribute['type']
+    attr_type = attribute.get('type', 'string')
     
-    if attr_type == 'string' and attribute['options']:
+    if attr_type == 'string' and attribute.get('options', []):
         # Select random option from list
         return random.choice(attribute['options'])
     
     elif attr_type == 'number':
-        min_val = float(attribute['min_value'] if attribute['min_value'] is not None else 0)
-        max_val = float(attribute['max_value'] if attribute['max_value'] is not None else 100)
+        min_val = float(attribute.get('min_value', 0) if attribute.get('min_value') is not None else 0)
+        max_val = float(attribute.get('max_value', 100) if attribute.get('max_value') is not None else 100)
         
         # Generate random float
         value = random.uniform(min_val, max_val)
@@ -565,8 +664,8 @@ def generate_random_value(attribute):
         return round(value, 2)
     
     elif attr_type == 'integer':
-        min_val = int(attribute['min_value'] if attribute['min_value'] is not None else 0)
-        max_val = int(attribute['max_value'] if attribute['max_value'] is not None else 100)
+        min_val = int(attribute.get('min_value', 0) if attribute.get('min_value') is not None else 0)
+        max_val = int(attribute.get('max_value', 100) if attribute.get('max_value') is not None else 100)
         
         # Generate random integer
         return random.randint(min_val, max_val)
@@ -575,7 +674,7 @@ def generate_random_value(attribute):
         # Generate random boolean
         return random.choice([True, False])
     
-    elif attr_type == 'string' and not attribute['options']:
+    elif attr_type == 'string' and not attribute.get('options', []):
         # Generate random string
         chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
         length = random.randint(5, 10)
@@ -654,12 +753,14 @@ def autonomous_send_data():
     try:
         profile_name = data.get('profile_name')
         device_name = data.get('device_name')
-        device_data = data.get('data', {})
+        attributes_data = data.get('attributes', {})
+        telemetry_data = data.get('telemetry', {})
         data_type = data.get('data_type', 'telemetry')
         include_metadata = data.get('include_metadata', False)
+        include_attributes = data.get('include_attributes', True)
         
         # Validate input
-        if not profile_name or not device_name or not device_data:
+        if not profile_name or not device_name or (not attributes_data and not telemetry_data):
             return jsonify({'success': False, 'error': 'Missing required data'}), 400
         
         # Get or create the device
@@ -672,14 +773,41 @@ def autonomous_send_data():
         metadata = {}
         if include_metadata and data_type == 'telemetry':
             metadata_generator = get_metadata_generator(profile_name)
-            metadata = metadata_generator(device_data)
+            # Use telemetry data for metadata generation
+            metadata = metadata_generator(telemetry_data)
             print(f"DEBUG: Generated metadata for autonomous mode: {metadata}")
         
-        # Send data based on type
-        if data_type == 'attributes':
-            tb_client.send_attributes(device_id, device_data)
-        else:  # telemetry
-            tb_client.send_telemetry(device_id, device_data, timestamp, metadata if metadata else None)
+        # Filter out null values from attributes data
+        cleaned_attributes = {}
+        for key, value in attributes_data.items():
+            if value is not None:  # Skip null values
+                cleaned_attributes[key] = value
+        
+        # Filter out null values from telemetry data
+        cleaned_telemetry = {}
+        for key, value in telemetry_data.items():
+            if value is not None:  # Skip null values
+                cleaned_telemetry[key] = value
+        
+        # Filter out null values from metadata if present
+        cleaned_metadata = {}
+        if metadata:
+            for key, value in metadata.items():
+                if value is not None:  # Skip null values
+                    cleaned_metadata[key] = value
+        
+        # Log the data to be sent
+        print(f"DEBUG: Autonomous mode - cleaned attributes data: {cleaned_attributes}")
+        print(f"DEBUG: Autonomous mode - cleaned telemetry data: {cleaned_telemetry}")
+        
+        # Send both types of data based on what's available and requested
+        if cleaned_attributes and (include_attributes or data_type == 'attributes'):
+            print(f"DEBUG: Sending attributes to device {device_id}: {cleaned_attributes}")
+            tb_client.send_attributes(device_id, cleaned_attributes)
+        
+        if cleaned_telemetry and data_type == 'telemetry':
+            print(f"DEBUG: Sending telemetry to device {device_id}: {cleaned_telemetry}")
+            tb_client.send_telemetry(device_id, cleaned_telemetry, timestamp, cleaned_metadata if cleaned_metadata else None)
         
         return jsonify({'success': True, 'message': f'Data sent to {device_name}'})
     

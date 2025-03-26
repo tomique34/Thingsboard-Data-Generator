@@ -2,7 +2,7 @@
   "profiles": [
     {
       "name": "Smart Thermostat",
-      "attributes": [
+      "telemetry": [
         {
           "name": "current_temperature",
           "type": "number",
@@ -11,32 +11,11 @@
           "options": []
         },
         {
-          "name": "target_temperature",
-          "type": "number",
-          "min_value": 5.0,
-          "max_value": 35.0,
-          "options": []
-        },
-        {
           "name": "humidity",
           "type": "number",
           "min_value": 0.0,
           "max_value": 100.0,
           "options": []
-        },
-        {
-          "name": "mode",
-          "type": "string",
-          "min_value": null,
-          "max_value": null,
-          "options": ["heat", "cool", "auto", "off"]
-        },
-        {
-          "name": "fan_mode",
-          "type": "string",
-          "min_value": null,
-          "max_value": null,
-          "options": ["auto", "on"]
         },
         {
           "name": "power_consumption",
@@ -59,12 +38,100 @@
           "max_value": null,
           "options": []
         }
+      ],
+      "attributes": [
+        {
+          "name": "target_temperature",
+          "type": "number",
+          "default_value": 22.5,
+          "min_value": 5.0,
+          "max_value": 35.0,
+          "persist": true
+        },
+        {
+          "name": "mode",
+          "type": "string",
+          "default_value": "auto",
+          "options": ["heat", "cool", "auto", "off"],
+          "persist": true
+        },
+        {
+          "name": "fan_mode",
+          "type": "string",
+          "default_value": "auto",
+          "options": ["auto", "on"],
+          "persist": true
+        },
+        {
+          "name": "deviceModel",
+          "type": "string",
+          "default_value": "ST-3000",
+          "persist": true
+        },
+        {
+          "name": "location",
+          "type": "string",
+          "default_value": "Living Room",
+          "persist": true
+        },
+        {
+          "name": "firmwareVersion",
+          "type": "string",
+          "default_value": "3.2.1",
+          "persist": true
+        }
+      ],
+      "metadata": [
+        {
+          "name": "energyRating",
+          "type": "string",
+          "default_value": "A+",
+          "options": ["A++", "A+", "A", "B", "C"],
+          "persist": true
+        },
+        {
+          "name": "lastServiceDate",
+          "type": "string",
+          "default_value": "2025-02-15",
+          "persist": true
+        },
+        {
+          "name": "schedulerActive",
+          "type": "boolean",
+          "default_value": true,
+          "persist": true
+        },
+        {
+          "name": "temperatureDifference",
+          "type": "number",
+          "default_value": 0.5,
+          "persist": true
+        },
+        {
+          "name": "energySavingMode",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "filterChangeNeeded",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "systemStatus",
+          "type": "string",
+          "default_value": "normal",
+          "options": ["normal", "maintenance", "error"],
+          "persist": true
+        }
       ]
     }
   ],
   "metadata": {
-    "exported_at": "2025-03-24T12:00:00",
-    "version": "1.0",
-    "description": "Smart Thermostat profile for Thingsboard Data Generator"
+    "exported_at": "2025-03-26T12:00:00",
+    "version": "1.1",
+    "description": "Enhanced Smart Thermostat profile with telemetry, attributes, and metadata for Thingsboard Data Generator"
   }
 }

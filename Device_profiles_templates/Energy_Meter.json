@@ -2,7 +2,7 @@
   "profiles": [
     {
       "name": "Energy Meter",
-      "attributes": [
+      "telemetry": [
         {
           "name": "active_power",
           "type": "number",
@@ -51,20 +51,86 @@
           "min_value": 0.0,
           "max_value": 1000000.0,
           "options": []
+        }
+      ],
+      "attributes": [
+        {
+          "name": "meterModel",
+          "type": "string",
+          "default_value": "EM-5000",
+          "persist": true
+        },
+        {
+          "name": "serialNumber",
+          "type": "string",
+          "default_value": "EM2025073654",
+          "persist": true
         },
         {
           "name": "phase",
           "type": "string",
-          "min_value": null,
-          "max_value": null,
-          "options": ["single", "three"]
+          "default_value": "three",
+          "options": ["single", "three"],
+          "persist": true
+        },
+        {
+          "name": "installationDate",
+          "type": "string",
+          "default_value": "2025-02-10",
+          "persist": true
+        },
+        {
+          "name": "location",
+          "type": "string",
+          "default_value": "Main Distribution Panel",
+          "persist": true
+        },
+        {
+          "name": "maxCapacity",
+          "type": "number",
+          "default_value": 15000.0,
+          "persist": true
+        }
+      ],
+      "metadata": [
+        {
+          "name": "isOverloaded",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "lastCalibrationTimestamp",
+          "type": "integer",
+          "default_value": 1742387821073,
+          "persist": true
+        },
+        {
+          "name": "powerQualityStatus",
+          "type": "string",
+          "default_value": "good",
+          "options": ["good", "warning", "poor"],
+          "persist": true
+        },
+        {
+          "name": "billingCycle",
+          "type": "string",
+          "default_value": "monthly",
+          "options": ["monthly", "quarterly", "annual"],
+          "persist": true
+        },
+        {
+          "name": "lastBillingTimestamp",
+          "type": "integer",
+          "default_value": 1741687821073,
+          "persist": true
         }
       ]
     }
   ],
   "metadata": {
-    "exported_at": "2025-03-24T12:00:00",
-    "version": "1.0",
-    "description": "Energy Meter profile for Thingsboard Data Generator"
+    "exported_at": "2025-03-26T12:00:00",
+    "version": "1.1",
+    "description": "Enhanced Energy Meter profile with telemetry, attributes, and metadata for Thingsboard Data Generator"
   }
 }

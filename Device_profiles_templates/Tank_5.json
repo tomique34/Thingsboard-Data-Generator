@@ -2,7 +2,7 @@
   "profiles": [
     {
       "name": "Tank 5",
-      "attributes": [
+      "telemetry": [
         {
           "name": "battery",
           "type": "number",
@@ -30,6 +30,64 @@
           "min_value": -20.0,
           "max_value": 60.0,
           "options": []
+        }
+      ],
+      "attributes": [
+        {
+          "name": "alarmFilter",
+          "type": "string",
+          "default_value": "offline lowFuel",
+          "persist": true
+        },
+        {
+          "name": "highTemperatureAlarmsCount",
+          "type": "integer",
+          "default_value": 0,
+          "persist": true
+        },
+        {
+          "name": "inactivityAlarmTime",
+          "type": "integer",
+          "default_value": 1742477821073,
+          "persist": true
+        },
+        {
+          "name": "inactivityTimeout",
+          "type": "integer",
+          "default_value": 720000,
+          "persist": true
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "default_value": true,
+          "persist": true
+        }
+      ],
+      "metadata": [
+        {
+          "name": "isLowBattery",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "isHighTemperature",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "isLowFuel",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "lastActivityTime",
+          "type": "integer",
+          "default_value": 0,
+          "persist": true
         }
       ]
     }

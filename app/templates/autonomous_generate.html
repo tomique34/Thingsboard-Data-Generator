@@ -119,8 +119,18 @@
                             <label class="form-check-label" for="include_metadata">Include Metadata</label>
                         </div>
                         <div class="form-text">
-                            Generate and send metadata like isLowBattery, isHighTemperature, ss_active based on telemetry values.
+                            Generate and send metadata based on telemetry values and predefined values.
                             This metadata is used by Thingsboard rule chains to control device status.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="include_attributes" name="include_attributes" value="true" checked>
+                            <label class="form-check-label" for="include_attributes">Include Attributes</label>
+                        </div>
+                        <div class="form-text">
+                            Send attributes along with telemetry data in a single operation.
                         </div>
                     </div>
                     
@@ -489,21 +499,35 @@
                 const deviceName = generationDevices[profile.name];
                 
                 if (deviceName) {
-                    // Generate data object from profile attributes
-                    const generatedData = {};
+                    // Generate data objects - one for attributes and one for telemetry
+                    const attributesData = {};
+                    const telemetryData = {};
                     
-                    profile.attributes.forEach(attr => {
-                        generatedData[attr.name] = generateRandomValue(attr);
-                    });
+                    // Process attributes from the profile
+                    if (profile.attributes && profile.attributes.length > 0) {
+                        profile.attributes.forEach(attr => {
+                            attributesData[attr.name] = generateRandomValue(attr);
+                        });
+                    }
+                    
+                    // Process telemetry from the profile
+                    if (profile.telemetry && profile.telemetry.length > 0) {
+                        profile.telemetry.forEach(attr => {
+                            telemetryData[attr.name] = generateRandomValue(attr);
+                        });
+                    }
                     
                     // Send the data to the server
-                    sendGeneratedData(profile.name, deviceName, generatedData, dataType);
+                    sendGeneratedData(profile.name, deviceName, attributesData, telemetryData, dataType);
                 }
             });
         }
         
         // Function to send the generated data to the server
-        function sendGeneratedData(profileName, deviceName, data, dataType) {
+        function sendGeneratedData(profileName, deviceName, attributesData, telemetryData, dataType) {
+            // Determine what data to display in the log
+            const logData = {...attributesData, ...telemetryData};
+            
             // Send the data to the server
             fetch('/api/autonomous-send-data', {
                 method: 'POST',
@@ -513,9 +537,11 @@
                 body: JSON.stringify({
                     profile_name: profileName,
                     device_name: deviceName,
-                    data: data,
+                    attributes: attributesData,  // Send attributes data separately
+                    telemetry: telemetryData,    // Send telemetry data separately
                     data_type: dataType,
-                    include_metadata: document.getElementById('include_metadata').checked
+                    include_metadata: document.getElementById('include_metadata').checked,
+                    include_attributes: document.getElementById('include_attributes').checked
                 })
             })
             .then(response => {
@@ -527,7 +553,7 @@
             .then(result => {
                 // Log the result
                 const timestamp = new Date();
-                logActivity(timestamp, deviceName, profileName, data, result.success);
+                logActivity(timestamp, deviceName, profileName, logData, result.success);
                 
                 // Increment message counter
                 messageCount++;
@@ -538,7 +564,7 @@
                 
                 // Log the error
                 const timestamp = new Date();
-                logActivity(timestamp, deviceName, profileName, data, false, error.message);
+                logActivity(timestamp, deviceName, profileName, logData, false, error.message);
             });
         }
         

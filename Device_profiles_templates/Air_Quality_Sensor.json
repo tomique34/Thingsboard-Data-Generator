@@ -2,7 +2,7 @@
   "profiles": [
     {
       "name": "Air Quality Sensor",
-      "attributes": [
+      "telemetry": [
         {
           "name": "pm25",
           "type": "number",
@@ -52,12 +52,72 @@
           "max_value": 500,
           "options": []
         }
+      ],
+      "attributes": [
+        {
+          "name": "deviceModel",
+          "type": "string",
+          "default_value": "AQS-2000",
+          "persist": true
+        },
+        {
+          "name": "firmwareVersion",
+          "type": "string",
+          "default_value": "1.2.5",
+          "persist": true
+        },
+        {
+          "name": "installationDate",
+          "type": "string",
+          "default_value": "2025-01-15",
+          "persist": true
+        },
+        {
+          "name": "maintenanceInterval",
+          "type": "integer",
+          "default_value": 90,
+          "persist": true
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "default_value": true,
+          "persist": true
+        }
+      ],
+      "metadata": [
+        {
+          "name": "isHighPollution",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "alertStatus",
+          "type": "string",
+          "default_value": "normal",
+          "options": ["normal", "warning", "critical"],
+          "persist": true
+        },
+        {
+          "name": "lastCalibrationTimestamp",
+          "type": "integer",
+          "default_value": 1742447821073,
+          "persist": true
+        },
+        {
+          "name": "recommendedAction",
+          "type": "string",
+          "default_value": "none",
+          "options": ["none", "ventilate", "evacuate"],
+          "persist": true
+        }
       ]
     }
   ],
   "metadata": {
-    "exported_at": "2025-03-24T12:00:00",
-    "version": "1.0",
-    "description": "Air Quality Sensor profile for Thingsboard Data Generator"
+    "exported_at": "2025-03-26T12:00:00",
+    "version": "1.1",
+    "description": "Enhanced Air Quality Sensor profile with telemetry, attributes, and metadata for Thingsboard Data Generator"
   }
 }

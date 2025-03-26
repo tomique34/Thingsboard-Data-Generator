@@ -20,12 +20,14 @@
     </div>
     
     <div class="col-md-8">
+        <!-- Telemetry Section -->
         <div class="card shadow mb-4">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Attributes</h5>
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Telemetry</h5>
+                <small class="text-white">Time-series data that changes over time</small>
             </div>
             <div class="card-body">
-                {% if profile.attributes %}
+                {% if profile.telemetry %}
                     <div class="table-responsive">
                         <table class="table table-striped">
                             <thead>
@@ -39,11 +41,11 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for attr in profile.attributes %}
+                                {% for attr in profile.telemetry %}
                                     <tr>
                                         <td>{{ attr.name }}</td>
                                         <td>
-                                            <span class="badge bg-secondary">{{ attr.type }}</span>
+                                            <span class="badge bg-primary">{{ attr.type }}</span>
                                         </td>
                                         <td>{{ attr.min_value if attr.min_value is not none else '-' }}</td>
                                         <td>{{ attr.max_value if attr.max_value is not none else '-' }}</td>
@@ -55,7 +57,72 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <form action="{{ url_for('main.delete_attribute', profile_name=profile.name, attr_index=loop.index0) }}" method="POST"
+                                            <form action="{{ url_for('main.delete_item', profile_name=profile.name, item_type='telemetry', item_index=loop.index0) }}" method="POST"
+                                                  onsubmit="return confirm('Are you sure you want to delete this telemetry item?');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No telemetry defined yet. Add one using the form on the right.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Attributes Section -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-tag me-2"></i>Attributes</h5>
+                <small class="text-white">Persistent values that describe the device</small>
+            </div>
+            <div class="card-body">
+                {% if profile.attributes %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Default Value</th>
+                                    <th>Options</th>
+                                    <th>Persistent</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attr in profile.attributes %}
+                                    <tr>
+                                        <td>{{ attr.name }}</td>
+                                        <td>
+                                            <span class="badge bg-success">{{ attr.type }}</span>
+                                        </td>
+                                        <td>{{ attr.default_value if attr.default_value is not none else '-' }}</td>
+                                        <td>
+                                            {% if attr.options %}
+                                                <small>{{ ', '.join(attr.options) }}</small>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if attr.persist %}
+                                                <span class="badge bg-success">Yes</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">No</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <form action="{{ url_for('main.delete_item', profile_name=profile.name, item_type='attributes', item_index=loop.index0) }}" method="POST"
                                                   onsubmit="return confirm('Are you sure you want to delete this attribute?');">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                                 <button type="submit" class="btn btn-sm btn-danger">
@@ -76,16 +143,93 @@
                 {% endif %}
             </div>
         </div>
+        
+        <!-- Metadata Section -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-code me-2"></i>Metadata</h5>
+                <small class="text-white">Additional data generated based on telemetry values</small>
+            </div>
+            <div class="card-body">
+                {% if profile.metadata %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Default Value</th>
+                                    <th>Options</th>
+                                    <th>Persistent</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for meta in profile.metadata %}
+                                    <tr>
+                                        <td>{{ meta.name }}</td>
+                                        <td>
+                                            <span class="badge bg-info">{{ meta.type }}</span>
+                                        </td>
+                                        <td>{{ meta.default_value if meta.default_value is not none else '-' }}</td>
+                                        <td>
+                                            {% if meta.options %}
+                                                <small>{{ ', '.join(meta.options) }}</small>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if meta.persist %}
+                                                <span class="badge bg-success">Yes</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">No</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <form action="{{ url_for('main.delete_item', profile_name=profile.name, item_type='metadata', item_index=loop.index0) }}" method="POST"
+                                                  onsubmit="return confirm('Are you sure you want to delete this metadata item?');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No metadata defined yet. Add one using the form on the right.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
     
     <div class="col-md-4">
-        <div class="card shadow">
+        <div class="card shadow sticky-top" style="top: 20px;">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Add Attribute</h5>
+                <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Add Data Item</h5>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('main.edit_device_profile', profile_name=profile.name) }}">
                     {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.data_category.label(class="form-label") }}
+                        {{ form.data_category(class="form-select") }}
+                        {% if form.data_category.errors %}
+                            <div class="text-danger">
+                                {% for error in form.data_category.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
                     
                     <div class="mb-3">
                         {{ form.name.label(class="form-label") }}
@@ -136,6 +280,18 @@
                     </div>
                     
                     <div class="mb-3">
+                        {{ form.default_value.label(class="form-label") }}
+                        {{ form.default_value(class="form-control", placeholder="Default value if any") }}
+                        {% if form.default_value.errors %}
+                            <div class="text-danger">
+                                {% for error in form.default_value.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
                         {{ form.options.label(class="form-label") }}
                         {{ form.options(class="form-control", placeholder="option1,option2,option3") }}
                         {% if form.options.errors %}
@@ -148,6 +304,18 @@
                         <small class="form-text text-muted">
                             For string type, separate options with commas
                         </small>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        {{ form.persist(class="form-check-input") }}
+                        {{ form.persist.label(class="form-check-label") }}
+                        {% if form.persist.errors %}
+                            <div class="text-danger">
+                                {% for error in form.persist.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     
                     <div class="d-grid">

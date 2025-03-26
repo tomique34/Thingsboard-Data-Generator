@@ -90,53 +90,150 @@
                             </div>
                         {% endif %}
                         <small class="form-text text-muted">
-                            Telemetry data includes timestamps, attributes are persistent.
+                            Choose which type of data to send. Telemetry is time-series data, while attributes are persistent.
+                        </small>
+                    </div>
+                    
+                <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.include_attributes(class="form-check-input") }}
+                            {{ form.include_attributes.label(class="form-check-label") }}
+                        </div>
+                        <small class="form-text text-muted">
+                            Include attributes when sending data (applies when sending telemetry as primary data type).
                         </small>
                     </div>
                     
                     <div class="mb-3">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="include_metadata" name="include_metadata" value="true">
-                            <label class="form-check-label" for="include_metadata">Include Metadata</label>
+                            {{ form.include_metadata(class="form-check-input") }}
+                            {{ form.include_metadata.label(class="form-check-label") }}
                         </div>
                         <small class="form-text text-muted">
-                            Generate and send metadata like isLowBattery, isHighTemperature, ss_active based on telemetry values.
+                            Generate and send metadata based on telemetry values and predefined values.
                         </small>
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Profile Attributes</label>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Type</th>
-                                        <th>Range/Options</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for attr in profile.attributes %}
+                        <label class="form-label">Profile Data Items</label>
+                        
+                        <!-- Telemetry -->
+                        {% if profile.telemetry %}
+                        <div class="mb-2">
+                            <h6 class="text-primary"><i class="fas fa-chart-line me-1"></i> Telemetry</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
                                         <tr>
-                                            <td>{{ attr.name }}</td>
-                                            <td>{{ attr.type }}</td>
-                                            <td>
-                                                {% if attr.type in ['number', 'integer'] %}
-                                                    {{ attr.min_value if attr.min_value is not none else '0' }} - 
-                                                    {{ attr.max_value if attr.max_value is not none else '100' }}
-                                                {% elif attr.type == 'string' and attr.options %}
-                                                    <small>{{ ', '.join(attr.options) }}</small>
-                                                {% elif attr.type == 'boolean' %}
-                                                    true/false
-                                                {% else %}
-                                                    -
-                                                {% endif %}
-                                            </td>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Range/Options</th>
                                         </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {% for attr in profile.telemetry %}
+                                            <tr>
+                                                <td>{{ attr.name }}</td>
+                                                <td>{{ attr.type }}</td>
+                                                <td>
+                                                    {% if attr.type in ['number', 'integer'] %}
+                                                        {{ attr.min_value if attr.min_value is not none else '0' }} - 
+                                                        {{ attr.max_value if attr.max_value is not none else '100' }}
+                                                    {% elif attr.type == 'string' and attr.options %}
+                                                        <small>{{ ', '.join(attr.options) }}</small>
+                                                    {% elif attr.type == 'boolean' %}
+                                                        true/false
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
+                        {% endif %}
+                        
+                        <!-- Attributes -->
+                        {% if profile.attributes %}
+                        <div class="mb-2">
+                            <h6 class="text-success"><i class="fas fa-tag me-1"></i> Attributes</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for attr in profile.attributes %}
+                                            <tr>
+                                                <td>{{ attr.name }}</td>
+                                                <td>{{ attr.type }}</td>
+                                                <td>
+                                                    {% if attr.default_value is not none %}
+                                                        {{ attr.default_value }}
+                                                    {% elif attr.type in ['number', 'integer'] %}
+                                                        {{ attr.min_value if attr.min_value is not none else '0' }} - 
+                                                        {{ attr.max_value if attr.max_value is not none else '100' }}
+                                                    {% elif attr.type == 'string' and attr.options %}
+                                                        <small>{{ ', '.join(attr.options) }}</small>
+                                                    {% elif attr.type == 'boolean' %}
+                                                        true/false
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Metadata -->
+                        {% if profile.metadata %}
+                        <div>
+                            <h6 class="text-info"><i class="fas fa-code me-1"></i> Metadata</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for meta in profile.metadata %}
+                                            <tr>
+                                                <td>{{ meta.name }}</td>
+                                                <td>{{ meta.type }}</td>
+                                                <td>
+                                                    {% if meta.default_value is not none %}
+                                                        {{ meta.default_value }}
+                                                    {% elif meta.type in ['number', 'integer'] %}
+                                                        {{ meta.min_value if meta.min_value is not none else '0' }} - 
+                                                        {{ meta.max_value if meta.max_value is not none else '100' }}
+                                                    {% elif meta.type == 'string' and meta.options %}
+                                                        <small>{{ ', '.join(meta.options) }}</small>
+                                                    {% elif meta.type == 'boolean' %}
+                                                        true/false
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                     
                     <div class="d-grid">
@@ -153,58 +250,62 @@
                 <h5 class="mb-0"><i class="fas fa-table me-2"></i>Generated Data</h5>
             </div>
             <div class="card-body">
-                {% if attributes or telemetry %}
-                    <div class="alert alert-success mb-3">
-                        <i class="fas fa-check-circle me-2"></i>
-                        Data sent successfully to ThingsBoard!
-                    </div>
-                    
-                    {% if attributes %}
-                        <h6>Attributes:</h6>
-                        <div class="table-responsive mb-4">
-                            <table class="table table-sm table-bordered">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Attribute</th>
-                                        <th>Value</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for key, value in attributes.items() %}
-                                        <tr>
-                                            <td>{{ key }}</td>
-                                            <td><code>{{ value }}</code></td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% endif %}
-                    
-                    {% if telemetry %}
-                        <h6>Telemetry:</h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Key</th>
-                                        <th>Value</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for key, value in telemetry.items() %}
-                                        <tr>
-                                            <td>{{ key }}</td>
-                                            <td><code>{{ value }}</code></td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% endif %}
+                {% if attributes or telemetry or client_attributes or server_attributes %}
+                <div class="alert alert-success mb-3">
+                <i class="fas fa-check-circle me-2"></i>
+                Data sent successfully to ThingsBoard!
+                </div>
+                
+                {% if telemetry %}
+                <h6>Telemetry:</h6>
+                <div class="table-responsive mb-4">
+                <table class="table table-sm table-bordered">
+                <thead class="table-light">
+                <tr>
+                <th>Key</th>
+                <th>Value</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for key, value in telemetry.items() %}
+                <tr>
+                <td>{{ key }}</td>
+                <td><code>{{ value }}</code></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+                {% endif %}
+                
+                {% if attributes %}
+                <h6 class="text-success"><i class="fas fa-tag me-1"></i> Attributes:</h6>
+                <div class="table-responsive mb-4">
+                <table class="table table-sm table-bordered">
+                <thead class="table-light">
+                <tr>
+                <th>Attribute</th>
+                <th>Value</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for key, value in attributes.items() %}
+                <tr>
+                <td>{{ key }}</td>
+                <td><code>{{ value }}</code></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+                {% endif %}
+                        
+
+                        
+
                     
                     {% if metadata %}
-                        <h6>Metadata:</h6>
+                        <h6 class="text-info"><i class="fas fa-code me-1"></i> Metadata:</h6>
                         <div class="table-responsive">
                             <table class="table table-sm table-bordered">
                                 <thead class="table-light">

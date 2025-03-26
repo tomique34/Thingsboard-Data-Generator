@@ -2,7 +2,7 @@
   "profiles": [
     {
       "name": "GPS Tracker",
-      "attributes": [
+      "telemetry": [
         {
           "name": "latitude",
           "type": "number",
@@ -53,25 +53,99 @@
           "options": []
         },
         {
-          "name": "fix_type",
-          "type": "string",
-          "min_value": null,
-          "max_value": null,
-          "options": ["no_fix", "2d_fix", "3d_fix"]
-        },
-        {
           "name": "battery_level",
           "type": "integer",
           "min_value": 0,
           "max_value": 100,
           "options": []
         }
+      ],
+      "attributes": [
+        {
+          "name": "device_id",
+          "type": "string",
+          "default_value": "GT-1000XS",
+          "persist": true
+        },
+        {
+          "name": "fix_type",
+          "type": "string",
+          "default_value": "3d_fix",
+          "options": ["no_fix", "2d_fix", "3d_fix"],
+          "persist": true
+        },
+        {
+          "name": "owner_name",
+          "type": "string",
+          "default_value": "Fleet Manager",
+          "persist": true
+        },
+        {
+          "name": "vehicle_type",
+          "type": "string",
+          "default_value": "truck",
+          "options": ["car", "truck", "van", "motorcycle", "bicycle"],
+          "persist": true
+        },
+        {
+          "name": "update_interval",
+          "type": "integer",
+          "default_value": 30,
+          "persist": true
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "default_value": true,
+          "persist": true
+        }
+      ],
+      "metadata": [
+        {
+          "name": "inGeofence",
+          "type": "boolean",
+          "default_value": true,
+          "persist": true
+        },
+        {
+          "name": "alertStatus",
+          "type": "string",
+          "default_value": "normal",
+          "options": ["normal", "warning", "alarm"],
+          "persist": true
+        },
+        {
+          "name": "lastReportTimestamp",
+          "type": "integer",
+          "default_value": 1742487821073,
+          "persist": true
+        },
+        {
+          "name": "signalStrength",
+          "type": "integer",
+          "min_value": 0,
+          "max_value": 5,
+          "default_value": 4,
+          "persist": true
+        },
+        {
+          "name": "totalDistance",
+          "type": "number",
+          "default_value": 15783.5,
+          "persist": true
+        },
+        {
+          "name": "isLowBattery",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        }
       ]
     }
   ],
   "metadata": {
-    "exported_at": "2025-03-24T12:00:00",
-    "version": "1.0",
-    "description": "GPS Tracker profile for Thingsboard Data Generator"
+    "exported_at": "2025-03-26T12:00:00",
+    "version": "1.1",
+    "description": "Enhanced GPS Tracker profile with telemetry, attributes, and metadata for Thingsboard Data Generator"
   }
 }

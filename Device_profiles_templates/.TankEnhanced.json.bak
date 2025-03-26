@@ -1,7 +1,7 @@
 {
   "profiles": [
     {
-      "name": "Tank 4",
+      "name": "TankEnhanced",
       "telemetry": [
         {
           "name": "battery",
@@ -32,7 +32,7 @@
           "options": []
         }
       ],
-      "attributes": [
+      "client_attributes": [
         {
           "name": "alarmFilter",
           "type": "string",
@@ -56,37 +56,13 @@
           "type": "integer",
           "default_value": 720000,
           "persist": true
-        },
+        }
+      ],
+      "server_attributes": [
         {
           "name": "active",
           "type": "boolean",
-          "default_value": true,
-          "persist": true
-        }
-      ],
-      "metadata": [
-        {
-          "name": "isLowBattery",
-          "type": "boolean",
           "default_value": false,
-          "persist": true
-        },
-        {
-          "name": "isHighTemperature",
-          "type": "boolean",
-          "default_value": false,
-          "persist": true
-        },
-        {
-          "name": "isLowFuel",
-          "type": "boolean",
-          "default_value": false,
-          "persist": true
-        },
-        {
-          "name": "lastActivityTime",
-          "type": "integer",
-          "default_value": 0,
           "persist": true
         }
       ]
@@ -95,6 +71,6 @@
   "metadata": {
     "exported_at": "2025-03-25T12:00:00",
     "version": "1.0",
-    "description": "Tank 4 device profile for Thingsboard Data Generator"
+    "description": "Enhanced Tank device profile with persistent attributes for Thingsboard Data Generator"
   }
 }

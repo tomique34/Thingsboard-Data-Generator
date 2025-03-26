@@ -1,7 +1,7 @@
 {
   "profiles": [
     {
-      "name": "Tank 4",
+      "name": "TankEnhancedNew",
       "telemetry": [
         {
           "name": "battery",
@@ -93,8 +93,8 @@
     }
   ],
   "metadata": {
-    "exported_at": "2025-03-25T12:00:00",
-    "version": "1.0",
-    "description": "Tank 4 device profile for Thingsboard Data Generator"
+    "exported_at": "2025-03-26T12:00:00",
+    "version": "1.1",
+    "description": "Enhanced Tank device profile with telemetry, attributes, and metadata for Thingsboard Data Generator"
   }
 }

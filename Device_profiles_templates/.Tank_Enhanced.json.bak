@@ -1,0 +1,86 @@
+{
+  "profiles": [
+    {
+      "name": "Tank Enhanced",
+      "telemetry": [
+        {
+          "name": "battery",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 100.0,
+          "options": []
+        },
+        {
+          "name": "fuelHeight",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 1000.0,
+          "options": []
+        },
+        {
+          "name": "fuelLevel",
+          "type": "number",
+          "min_value": 0.0,
+          "max_value": 100.0,
+          "options": []
+        },
+        {
+          "name": "temperature",
+          "type": "number",
+          "min_value": -20.0,
+          "max_value": 60.0,
+          "options": []
+        }
+      ],
+      "client_attributes": [
+        {
+          "name": "maxFuelCapacity",
+          "type": "number",
+          "default_value": 1000.0
+        },
+        {
+          "name": "minOperatingTemp",
+          "type": "number",
+          "default_value": -10.0
+        },
+        {
+          "name": "maxOperatingTemp",
+          "type": "number",
+          "default_value": 50.0
+        },
+        {
+          "name": "installationDate",
+          "type": "string",
+          "default_value": "2025-01-01"
+        },
+        {
+          "name": "modelNumber",
+          "type": "string",
+          "default_value": "TK-2025"
+        }
+      ],
+      "server_attributes": [
+        {
+          "name": "alarmFilter",
+          "type": "string",
+          "default_value": "offline lowFuel"
+        },
+        {
+          "name": "inactivityTimeout",
+          "type": "number",
+          "default_value": 720000
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "default_value": true
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "exported_at": "2025-03-25T12:00:00",
+    "version": "1.1",
+    "description": "Enhanced Tank device profile with client and server attributes for Thingsboard Data Generator"
+  }
+}

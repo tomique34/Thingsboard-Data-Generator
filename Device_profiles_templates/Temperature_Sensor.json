@@ -2,7 +2,7 @@
   "profiles": [
     {
       "name": "Temperature Sensor",
-      "attributes": [
+      "telemetry": [
         {
           "name": "temperature",
           "type": "number",
@@ -23,13 +23,100 @@
           "min_value": 0,
           "max_value": 100,
           "options": []
+        },
+        {
+          "name": "pressure",
+          "type": "number",
+          "min_value": 900.0,
+          "max_value": 1100.0,
+          "options": []
+        }
+      ],
+      "attributes": [
+        {
+          "name": "deviceModel",
+          "type": "string",
+          "default_value": "TS-2000",
+          "persist": true
+        },
+        {
+          "name": "sensorType",
+          "type": "string",
+          "default_value": "DHT22",
+          "options": ["DHT11", "DHT22", "DS18B20", "BME280"],
+          "persist": true
+        },
+        {
+          "name": "location",
+          "type": "string",
+          "default_value": "Living Room",
+          "persist": true
+        },
+        {
+          "name": "firmwareVersion",
+          "type": "string",
+          "default_value": "1.5.2",
+          "persist": true
+        },
+        {
+          "name": "updateInterval",
+          "type": "integer",
+          "default_value": 300,
+          "persist": true
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "default_value": true,
+          "persist": true
+        }
+      ],
+      "metadata": [
+        {
+          "name": "isLowBattery",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "isHighTemperature",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "isLowHumidity",
+          "type": "boolean",
+          "default_value": false,
+          "persist": true
+        },
+        {
+          "name": "lastCalibrationDate",
+          "type": "string",
+          "default_value": "2025-01-15",
+          "persist": true
+        },
+        {
+          "name": "calibrationStatus",
+          "type": "string",
+          "default_value": "valid",
+          "options": ["valid", "needed", "expired"],
+          "persist": true
+        },
+        {
+          "name": "signalStrength",
+          "type": "integer",
+          "min_value": 0,
+          "max_value": 5,
+          "default_value": 4,
+          "persist": true
         }
       ]
     }
   ],
   "metadata": {
-    "exported_at": "2025-03-24T12:00:00",
-    "version": "1.0",
-    "description": "Temperature Sensor profile for Thingsboard Data Generator"
+    "exported_at": "2025-03-26T12:00:00",
+    "version": "1.1",
+    "description": "Enhanced Temperature Sensor profile with telemetry, attributes, and metadata for Thingsboard Data Generator"
   }
 }

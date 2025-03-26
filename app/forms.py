@@ -19,8 +19,16 @@ class DeviceProfileForm(FlaskForm):
 
 
 class AttributeForm(FlaskForm):
-    """Form for adding an attribute to a device profile"""
+    """Form for adding an attribute, telemetry or metadata to a device profile"""
     name = StringField('Attribute Name', validators=[DataRequired(), Length(min=1, max=50)])
+    data_category = SelectField('Data Category',
+                         choices=[
+                             ('telemetry', 'Telemetry'),
+                             ('attributes', 'Attributes'),
+                             ('metadata', 'Metadata')
+                         ],
+                         default='telemetry',
+                         validators=[DataRequired()])
     data_type = SelectField('Data Type', 
                           choices=[
                               ('number', 'Number (Float)'),
@@ -31,8 +39,10 @@ class AttributeForm(FlaskForm):
                           validators=[DataRequired()])
     min_value = FloatField('Minimum Value', validators=[Optional()])
     max_value = FloatField('Maximum Value', validators=[Optional()])
+    default_value = StringField('Default Value', validators=[Optional()])
     options = StringField('Options (comma separated, for string type)', validators=[Optional()])
-    submit = SubmitField('Add Attribute')
+    persist = BooleanField('Persist Value', default=True)
+    submit = SubmitField('Add Item')
 
 
 class GenerateDataForm(FlaskForm):
@@ -44,6 +54,8 @@ class GenerateDataForm(FlaskForm):
                               ('attributes', 'Attributes')
                           ],
                           validators=[DataRequired()])
+    include_attributes = BooleanField('Include Attributes', default=True)
+    include_metadata = BooleanField('Include Metadata', default=False)
     submit = SubmitField('Generate & Send Data')
 
 
@@ -72,5 +84,8 @@ class AutonomousGenerationForm(FlaskForm):
                           ],
                           default='telemetry',
                           validators=[DataRequired()])
+    
+    include_attributes = BooleanField('Include Attributes', default=True)
+    include_metadata = BooleanField('Include Metadata', default=False)
     
     submit = SubmitField('Configure Devices')
