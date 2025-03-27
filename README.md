@@ -19,8 +19,11 @@ A Flask web application for generating random data for Thingsboard devices. This
 - Import/Export device profiles in JSON format
 - Integration with Thingsboard REST API
 - Secure credential handling through environment variables
+- Docker and Kubernetes support
 
 ## Installation
+
+### Standard Installation
 
 1. Clone this repository
 2. Create a virtual environment: `python -m venv venv`
@@ -31,9 +34,100 @@ A Flask web application for generating random data for Thingsboard devices. This
 5. Create a `.env` file with your Thingsboard credentials (see `.env.example`)
 6. Run the application: `python app.py`
 
+### Docker Installation
+
+#### Using Docker Compose (Recommended)
+
+1. Clone this repository
+2. Copy `.env.example` to `.env` and edit the values for your Thingsboard instance
+3. Run the application with Docker Compose:
+   ```
+   docker-compose up -d
+   ```
+4. Access the web interface at http://localhost:5001
+
+#### Using Docker Directly
+
+1. Clone this repository
+2. Build the Docker image:
+   ```
+   docker build -t thingsboard-data-generator .
+   ```
+3. Run the Docker container:
+   ```
+   docker run -p 5001:5001 --env-file .env -d thingsboard-data-generator
+   ```
+4. Access the web interface at http://localhost:5001
+
+### Kubernetes Deployment
+
+1. Build and push the Docker image to your container registry:
+   ```
+   docker build -t your-registry/thingsboard-data-generator:latest .
+   docker push your-registry/thingsboard-data-generator:latest
+   ```
+
+2. Create a Kubernetes ConfigMap or Secret for environment variables:
+   ```yaml
+   apiVersion: v1
+   kind: ConfigMap
+   metadata:
+     name: thingsboard-data-generator-config
+   data:
+     TB_HOST: "http://your-thingsboard-host"
+     TB_PORT: "8080"
+     TB_USERNAME: "your-username"
+     TB_PASSWORD: "your-password"
+     FLASK_SECRET_KEY: "your-secret-key"
+     FLASK_DEBUG: "False"
+   ```
+
+3. Create a Kubernetes Deployment:
+   ```yaml
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: thingsboard-data-generator
+   spec:
+     replicas: 1
+     selector:
+       matchLabels:
+         app: thingsboard-data-generator
+     template:
+       metadata:
+         labels:
+           app: thingsboard-data-generator
+       spec:
+         containers:
+         - name: thingsboard-data-generator
+           image: your-registry/thingsboard-data-generator:latest
+           ports:
+           - containerPort: 5001
+           envFrom:
+           - configMapRef:
+               name: thingsboard-data-generator-config
+   ```
+
+4. Create a Kubernetes Service:
+   ```yaml
+   apiVersion: v1
+   kind: Service
+   metadata:
+     name: thingsboard-data-generator
+   spec:
+     selector:
+       app: thingsboard-data-generator
+     ports:
+     - port: 80
+       targetPort: 5001
+     type: ClusterIP
+   ```
+
+5. Optional: Create an Ingress resource for external access
+
 ## Usage
 
-1. Access the web interface at http://localhost:5000
+1. Access the web interface at http://localhost:5001
 2. Configure your Thingsboard connection
 3. Create device profiles with attributes
 4. Generate and send data to Thingsboard
@@ -109,6 +203,19 @@ For generating data across multiple devices simultaneously:
 6. Stop the process when testing is complete
 
 This feature is perfect for simulating multi-device environments and testing system scaling.
+
+## Docker Configuration Options
+
+The Docker image supports the following environment variables:
+
+- `TB_HOST`: Thingsboard host URL (default: http://localhost)
+- `TB_PORT`: Thingsboard port (default: 8080)
+- `TB_USERNAME`: Thingsboard username (default: tenant@thingsboard.org)
+- `TB_PASSWORD`: Thingsboard password (default: tenant)
+- `FLASK_SECRET_KEY`: Secret key for Flask sessions (default: dev-key-change-me)
+- `FLASK_DEBUG`: Debug mode (default: False)
+
+You can set these in your `.env` file or directly in the `docker-compose.yml` file.
 
 ## License
 

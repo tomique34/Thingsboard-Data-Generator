@@ -1,0 +1,19 @@
+
+services:
+  thingsboard-data-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - TB_HOST=${TB_HOST:-http://localhost}
+      - TB_PORT=${TB_PORT:-8080}
+      - TB_USERNAME=${TB_USERNAME:-tenant@thingsboard.org}
+      - TB_PASSWORD=${TB_PASSWORD:-tenant}
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY:-dev-key-change-me}
+      - FLASK_DEBUG=${FLASK_DEBUG:-False}
+    volumes:
+      - ./Device_profiles_templates:/app/Device_profiles_templates
+    restart: unless-stopped
+
